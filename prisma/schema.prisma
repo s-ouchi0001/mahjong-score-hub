@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum TableStatus {
+  IDLE
+  PLAYING
+  FINISHED
+}
+
+enum ConnectionStatus {
+  ONLINE
+  OFFLINE
+}
+
+enum GameStatus {
+  ACTIVE
+  FINISHED
+}
+
+model Store {
+  id        String         @id @default(cuid())
+  name      String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  tables    MahjongTable[]
+  players   Player[]
+  games     Game[]
+}
+
+model MahjongTable {
+  id               String           @id @default(cuid())
+  storeId          String
+  tableNumber      Int
+  deviceId         String           @unique
+  status           TableStatus      @default(IDLE)
+  connectionStatus ConnectionStatus @default(OFFLINE)
+  lastSeenAt       DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  store            Store            @relation(fields: [storeId], references: [id])
+  games            Game[]
+  pointSnapshots   PointSnapshot[]
+
+  @@unique([storeId, tableNumber])
+  @@map("tables")
+}
+
+model Player {
+  id          String       @id @default(cuid())
+  storeId     String
+  name        String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  store       Store        @relation(fields: [storeId], references: [id])
+  gamePlayers GamePlayer[]
+
+  @@unique([storeId, name])
+}
+
+model Game {
+  id             String          @id @default(cuid())
+  storeId        String
+  tableId        String
+  status         GameStatus      @default(ACTIVE)
+  startedAt      DateTime        @default(now())
+  finishedAt     DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  store          Store           @relation(fields: [storeId], references: [id])
+  table          MahjongTable    @relation(fields: [tableId], references: [id])
+  players        GamePlayer[]
+  pointSnapshots PointSnapshot[]
+}
+
+model GamePlayer {
+  id            String   @id @default(cuid())
+  gameId        String
+  playerId      String
+  seat          Int
+  currentPoints Int      @default(25000)
+  finalPoints   Int?
+  rank          Int?
+  score         Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  game          Game     @relation(fields: [gameId], references: [id])
+  player        Player   @relation(fields: [playerId], references: [id])
+
+  @@unique([gameId, playerId])
+  @@unique([gameId, seat])
+}
+
+model PointSnapshot {
+  id        String       @id @default(cuid())
+  tableId   String
+  gameId    String?
+  deviceId  String
+  payload   Json
+  createdAt DateTime     @default(now())
+  table     MahjongTable @relation(fields: [tableId], references: [id])
+  game      Game?        @relation(fields: [gameId], references: [id])
+}
