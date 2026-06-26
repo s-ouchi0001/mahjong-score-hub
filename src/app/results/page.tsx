@@ -1,10 +1,17 @@
 import { AppShell } from "@/app/components/AppShell";
 import { ResultRegistration } from "@/app/results/ResultRegistration";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "@/lib/session";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function ResultsPage() {
+  const session = await getServerSession();
+  if (session?.role === "player") {
+    redirect(`/players?playerId=${session.playerId}`);
+  }
+
   const [tables, players] = await Promise.all([
     prisma.mahjongTable.findMany({ orderBy: { tableNumber: "asc" } }),
     prisma.player.findMany({ orderBy: { name: "asc" } }),

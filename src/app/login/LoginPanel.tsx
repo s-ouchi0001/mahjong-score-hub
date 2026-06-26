@@ -40,6 +40,8 @@ export function LoginPanel({ players }: { players: PlayerOption[] }) {
           loggedInAt: new Date().toISOString(),
         }),
       );
+      document.cookie = "mahjong-score-role=store; path=/; max-age=2592000; SameSite=Lax";
+      document.cookie = "mahjong-score-player-id=; path=/; max-age=0; SameSite=Lax";
       router.push("/store/players");
       return;
     }
@@ -58,6 +60,8 @@ export function LoginPanel({ players }: { players: PlayerOption[] }) {
         loggedInAt: new Date().toISOString(),
       }),
     );
+    document.cookie = "mahjong-score-role=player; path=/; max-age=2592000; SameSite=Lax";
+    document.cookie = `mahjong-score-player-id=${selectedPlayer.id}; path=/; max-age=2592000; SameSite=Lax`;
     router.push(`/players?playerId=${selectedPlayer.id}`);
   }
 
@@ -114,10 +118,6 @@ export function LoginPanel({ players }: { players: PlayerOption[] }) {
                 </option>
               ))}
             </select>
-          </div>
-          <div className="field">
-            <label htmlFor="player-pin">PIN</label>
-            <input id="player-pin" inputMode="numeric" placeholder="0000" />
           </div>
         </div>
       )}

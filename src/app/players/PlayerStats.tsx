@@ -32,8 +32,24 @@ export function PlayerStats({ players }: { players: PlayerOption[] }) {
   const searchParams = useSearchParams();
   const initialPlayerId = searchParams.get("playerId");
   const [playerId, setPlayerId] = useState(initialPlayerId ?? players[0]?.id ?? "");
+  const [lockedPlayerId, setLockedPlayerId] = useState<string | null>(null);
   const [payload, setPayload] = useState<StatsPayload | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const raw = window.localStorage.getItem("mahjong-score-session");
+    if (!raw) return;
+
+    try {
+      const session = JSON.parse(raw) as { role?: string; playerId?: string };
+      if (session.role === "player" && session.playerId) {
+        setLockedPlayerId(session.playerId);
+        setPlayerId(session.playerId);
+      }
+    } catch {
+      return;
+    }
+  }, []);
 
   useEffect(() => {
     if (!playerId) return;
@@ -46,18 +62,20 @@ export function PlayerStats({ players }: { players: PlayerOption[] }) {
 
   return (
     <div className="grid">
-      <section className="panel">
-        <div className="field">
-          <label htmlFor="player">プレイヤー</label>
-          <select id="player" value={playerId} onChange={(event) => setPlayerId(event.target.value)}>
-            {players.map((player) => (
-              <option key={player.id} value={player.id}>
-                {player.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </section>
+      {lockedPlayerId ? null : (
+        <section className="panel">
+          <div className="field">
+            <label htmlFor="player">プレイヤー</label>
+            <select id="player" value={playerId} onChange={(event) => setPlayerId(event.target.value)}>
+              {players.map((player) => (
+                <option key={player.id} value={player.id}>
+                  {player.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </section>
+      )}
 
       <section className="panel">
         <h2>{payload?.player.name ?? "成績"} {loading ? "集計中" : ""}</h2>
