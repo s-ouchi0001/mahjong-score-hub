@@ -24,6 +24,11 @@ enum GameStatus {
   FINISHED
 }
 
+enum ResultSource {
+  MANUAL
+  IMAGE_RECOGNITION
+}
+
 model Store {
   id        String         @id @default(cuid())
   name      String
@@ -69,6 +74,8 @@ model Game {
   storeId        String
   tableId        String
   status         GameStatus      @default(ACTIVE)
+  resultSource   ResultSource?
+  resultPayload  Json?
   startedAt      DateTime        @default(now())
   finishedAt     DateTime?
   createdAt      DateTime        @default(now())

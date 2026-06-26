@@ -13,7 +13,8 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma db push --force-reset && npm run db:seed",
-    "mock:gateway": "tsx scripts/mockBluetoothGateway.ts"
+    "mock:gateway": "tsx scripts/mockBluetoothGateway.ts",
+    "mock:ocr": "tsx scripts/mockImageRecognitionResult.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.10.1",

@@ -13,6 +13,8 @@ type TableResponse = {
   }[];
 };
 
+export {};
+
 const args = new Map<string, string>();
 for (let i = 2; i < process.argv.length; i += 2) {
   args.set(process.argv[i], process.argv[i + 1]);
