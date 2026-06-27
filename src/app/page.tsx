@@ -25,15 +25,23 @@ export default async function DashboardPage() {
   const tables = await prisma.mahjongTable.findMany({
     where: { storeId: user.storeId },
     orderBy: { tableNumber: "asc" },
-    include: {
+    select: {
+      id: true,
+      tableNumber: true,
+      status: true,
+      connectionStatus: true,
+      lastSeenAt: true,
       games: {
         where: { status: "ACTIVE" },
         take: 1,
         orderBy: { startedAt: "desc" },
-        include: {
+        select: {
           players: {
             orderBy: { seat: "asc" },
-            include: { player: true },
+            select: {
+              currentPoints: true,
+              player: { select: { name: true } },
+            },
           },
         },
       },
@@ -41,7 +49,7 @@ export default async function DashboardPage() {
   });
 
   return (
-    <AppShell>
+    <AppShell user={user}>
       <section className="page-title">
         <div>
           <h1>本部ダッシュボード</h1>

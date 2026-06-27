@@ -27,12 +27,18 @@ export default async function StorePlayersPage() {
   const players = await prisma.player.findMany({
     where: { storeId: user.storeId },
     orderBy: { name: "asc" },
-    include: {
+    select: {
+      id: true,
+      name: true,
       gamePlayers: {
         where: {
           game: { status: "FINISHED" },
           rank: { not: null },
           score: { not: null },
+        },
+        select: {
+          rank: true,
+          score: true,
         },
       },
     },
@@ -59,7 +65,7 @@ export default async function StorePlayersPage() {
   });
 
   return (
-    <AppShell>
+    <AppShell user={user}>
       <section className="page-title">
         <div>
           <h1>全ユーザ成績</h1>

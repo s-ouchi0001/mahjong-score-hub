@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Session =
@@ -13,21 +13,14 @@ type Session =
   | {
       role: "PLAYER";
       name: string;
-      playerId: string;
+      playerId: string | null;
       storeName: string;
     }
   | null;
 
-export function SessionNav() {
+export function SessionNav({ session: initialSession }: { session: Session }) {
   const router = useRouter();
-  const [session, setSession] = useState<Session>(null);
-
-  useEffect(() => {
-    fetch("/api/auth/me")
-      .then((response) => response.json())
-      .then((payload) => setSession(payload.user))
-      .catch(() => setSession(null));
-  }, []);
+  const [session, setSession] = useState<Session>(initialSession);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -36,7 +29,7 @@ export function SessionNav() {
     router.refresh();
   }
 
-  if (session?.role === "PLAYER") {
+  if (session?.role === "PLAYER" && session.playerId) {
     return (
       <nav className="nav" aria-label="主要画面">
         <Link href={`/players?playerId=${session.playerId}`}>自分の成績</Link>

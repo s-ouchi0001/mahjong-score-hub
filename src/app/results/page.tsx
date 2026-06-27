@@ -11,17 +11,22 @@ export default async function ResultsPage() {
   const games = await prisma.game.findMany({
     where: { storeId: user.storeId, status: "ACTIVE" },
     orderBy: { startedAt: "desc" },
-    include: {
-      table: true,
+    select: {
+      id: true,
+      table: { select: { tableNumber: true } },
       players: {
         orderBy: { seat: "asc" },
-        include: { player: true },
+        select: {
+          seat: true,
+          currentPoints: true,
+          player: { select: { id: true, name: true } },
+        },
       },
     },
   });
 
   return (
-    <AppShell>
+    <AppShell user={user}>
       <section className="page-title">
         <div>
           <h1>各卓成績入力</h1>

@@ -60,6 +60,7 @@ model MahjongTable {
   pointSnapshots   PointSnapshot[]
 
   @@unique([storeId, tableNumber])
+  @@index([storeId, status])
   @@map("tables")
 }
 
@@ -74,6 +75,7 @@ model Player {
   users       AppUser[]
 
   @@unique([storeId, name])
+  @@index([storeId])
 }
 
 model AppUser {
@@ -88,6 +90,9 @@ model AppUser {
   updatedAt    DateTime @updatedAt
   store        Store    @relation(fields: [storeId], references: [id])
   player       Player?  @relation(fields: [playerId], references: [id])
+
+  @@index([storeId, role])
+  @@index([playerId])
 }
 
 model Game {
@@ -105,6 +110,9 @@ model Game {
   table          MahjongTable    @relation(fields: [tableId], references: [id])
   players        GamePlayer[]
   pointSnapshots PointSnapshot[]
+
+  @@index([storeId, status, startedAt])
+  @@index([tableId, status])
 }
 
 model GamePlayer {
@@ -123,6 +131,8 @@ model GamePlayer {
 
   @@unique([gameId, playerId])
   @@unique([gameId, seat])
+  @@index([playerId])
+  @@index([rank])
 }
 
 model PointSnapshot {
@@ -134,4 +144,7 @@ model PointSnapshot {
   createdAt DateTime     @default(now())
   table     MahjongTable @relation(fields: [tableId], references: [id])
   game      Game?        @relation(fields: [gameId], references: [id])
+
+  @@index([tableId, createdAt])
+  @@index([gameId])
 }

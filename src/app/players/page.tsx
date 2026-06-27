@@ -13,7 +13,7 @@ export default async function PlayersPage() {
       : await prisma.player.findMany({ where: { storeId: user.storeId }, orderBy: { name: "asc" } });
 
   return (
-    <AppShell>
+    <AppShell user={user}>
       <section className="page-title">
         <div>
           <h1>プレイヤー成績</h1>

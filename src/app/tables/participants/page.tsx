@@ -12,25 +12,32 @@ export default async function TableParticipantsPage() {
     prisma.mahjongTable.findMany({
       where: { storeId: user.storeId },
       orderBy: { tableNumber: "asc" },
-      include: {
+      select: {
+        id: true,
+        tableNumber: true,
+        status: true,
         games: {
           where: { status: "ACTIVE" },
           take: 1,
           orderBy: { startedAt: "desc" },
-          include: {
+          select: {
+            id: true,
             players: {
               orderBy: { seat: "asc" },
-              include: { player: true },
+              select: {
+                seat: true,
+                player: { select: { id: true, name: true } },
+              },
             },
           },
         },
       },
     }),
-    prisma.player.findMany({ where: { storeId: user.storeId }, orderBy: { name: "asc" } }),
+    prisma.player.findMany({ where: { storeId: user.storeId }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
 
   return (
-    <AppShell>
+    <AppShell user={user}>
       <section className="page-title">
         <div>
           <h1>各卓メンバー管理</h1>
