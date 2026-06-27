@@ -60,7 +60,7 @@ export function SessionNav({ session: initialSession }: { session: Session }) {
         <Link href="/">本部</Link>
         <Link href="/store/users">ユーザ管理</Link>
         <Link href="/store/players">成績一覧</Link>
-        <Link href="/tables/participants">メンバー管理</Link>
+        <Link href="/tables/participants">卓管理</Link>
         <Link href="/results">成績入力</Link>
         <Link href="/players">プレイヤー成績</Link>
         <Link href="/login">ログイン</Link>

@@ -82,7 +82,7 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
   if (!gameState.length) {
     return (
       <section className="panel">
-        <p className="muted">成績入力できる対局中の卓はありません。先にメンバー管理画面で卓のメンバーを登録してください。</p>
+        <p className="muted">成績入力できる対局中の卓はありません。先に卓管理画面で卓のメンバーを登録してください。</p>
       </section>
     );
   }

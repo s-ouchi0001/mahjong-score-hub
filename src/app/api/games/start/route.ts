@@ -35,11 +35,60 @@ export async function POST(request: NextRequest) {
     return badRequest("入場中のプレイヤーを4人選択してください。");
   }
 
+  const seatedOnOtherTable = await prisma.gamePlayer.findFirst({
+    where: {
+      playerId: { in: playerIds },
+      game: {
+        status: "ACTIVE",
+        tableId: { not: tableId },
+        storeId: table.storeId,
+      },
+    },
+    include: {
+      player: { select: { name: true } },
+      game: { include: { table: { select: { tableNumber: true } } } },
+    },
+  });
+  if (seatedOnOtherTable) {
+    return badRequest(`${seatedOnOtherTable.player.name}さんは${seatedOnOtherTable.game.table.tableNumber}卓に着席中です。`);
+  }
+
   const activeGame = await prisma.game.findFirst({
     where: { tableId, status: "ACTIVE" },
   });
   if (activeGame) {
-    return badRequest("この卓ではすでに対局が進行中です。");
+    const game = await prisma.$transaction(async (tx) => {
+      await tx.gamePlayer.deleteMany({ where: { gameId: activeGame.id } });
+      await tx.gamePlayer.createMany({
+        data: playerIds.map((playerId, index) => ({
+          gameId: activeGame.id,
+          playerId,
+          seat: index + 1,
+          currentPoints: 25000,
+        })),
+      });
+
+      await tx.mahjongTable.update({
+        where: { id: tableId },
+        data: {
+          status: "PLAYING",
+          connectionStatus: "ONLINE",
+          lastSeenAt: new Date(),
+        },
+      });
+
+      return tx.game.findUniqueOrThrow({
+        where: { id: activeGame.id },
+        include: {
+          players: {
+            orderBy: { seat: "asc" },
+            include: { player: true },
+          },
+        },
+      });
+    });
+
+    return NextResponse.json({ game });
   }
 
   const game = await prisma.$transaction(async (tx) => {

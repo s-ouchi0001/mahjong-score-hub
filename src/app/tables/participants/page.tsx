@@ -44,8 +44,8 @@ export default async function TableParticipantsPage() {
     <AppShell user={user}>
       <section className="page-title">
         <div>
-          <h1>各卓メンバー管理</h1>
-          <p>卓ごとに現在打っている4人を登録します。</p>
+          <h1>卓管理</h1>
+          <p>卓ごとの着席メンバーを登録・変更し、未着席の入場中ユーザを確認します。</p>
         </div>
       </section>
       <TableParticipants
