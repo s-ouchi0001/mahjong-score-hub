@@ -87,7 +87,7 @@ export function TableParticipants({
   }
 
   return (
-    <div className="grid two">
+    <div className="table-member-layout">
       <section className="panel">
         <h2>卓を選択</h2>
         <div className="table-list">

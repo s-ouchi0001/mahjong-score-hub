@@ -100,6 +100,12 @@ textarea {
   grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
 }
 
+.table-member-layout {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(220px, 0.75fr) minmax(0, 1.25fr);
+}
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -283,7 +289,7 @@ textarea {
 .player-grid {
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
 .metric-grid {
@@ -411,6 +417,7 @@ textarea {
 
 @media (max-width: 920px) {
   .grid.two,
+  .table-member-layout,
   .player-grid,
   .metric-grid {
     grid-template-columns: 1fr;
