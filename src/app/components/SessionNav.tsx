@@ -31,29 +31,45 @@ export function SessionNav({ session: initialSession }: { session: Session }) {
 
   if (session?.role === "PLAYER" && session.playerId) {
     return (
-      <nav className="nav" aria-label="主要画面">
-        <Link href={`/players?playerId=${session.playerId}`}>自分の成績</Link>
-        <button className="nav-button" type="button" onClick={logout}>
-          ログアウト
-        </button>
-      </nav>
+      <div className="topbar-actions">
+        <div className="session-badge" aria-label="ログイン中ユーザ">
+          <span>ユーザ</span>
+          <strong>{session.name}</strong>
+          <small>{session.storeName}</small>
+        </div>
+        <nav className="nav" aria-label="主要画面">
+          <Link href={`/players?playerId=${session.playerId}`}>自分の成績</Link>
+          <button className="nav-button" type="button" onClick={logout}>
+            ログアウト
+          </button>
+        </nav>
+      </div>
     );
   }
 
   return (
-    <nav className="nav" aria-label="主要画面">
-      <Link href="/">本部</Link>
-      <Link href="/store/users">ユーザ管理</Link>
-      <Link href="/store/players">成績一覧</Link>
-      <Link href="/tables/participants">メンバー管理</Link>
-      <Link href="/results">成績入力</Link>
-      <Link href="/players">プレイヤー成績</Link>
-      <Link href="/login">ログイン</Link>
+    <div className="topbar-actions">
       {session?.role === "STORE_ADMIN" ? (
-        <button className="nav-button" type="button" onClick={logout}>
-          ログアウト
-        </button>
+        <div className="session-badge" aria-label="ログイン中管理者">
+          <span>管理者</span>
+          <strong>{session.name}</strong>
+          <small>{session.storeName}</small>
+        </div>
       ) : null}
-    </nav>
+      <nav className="nav" aria-label="主要画面">
+        <Link href="/">本部</Link>
+        <Link href="/store/users">ユーザ管理</Link>
+        <Link href="/store/players">成績一覧</Link>
+        <Link href="/tables/participants">メンバー管理</Link>
+        <Link href="/results">成績入力</Link>
+        <Link href="/players">プレイヤー成績</Link>
+        <Link href="/login">ログイン</Link>
+        {session?.role === "STORE_ADMIN" ? (
+          <button className="nav-button" type="button" onClick={logout}>
+            ログアウト
+          </button>
+        ) : null}
+      </nav>
+    </div>
   );
 }
