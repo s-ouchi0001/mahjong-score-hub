@@ -1,22 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 
-type PlayerSummary = {
+type ManagedPlayer = {
   id: string;
   name: string;
   managementNumber: string | null;
   isCheckedIn: boolean;
-  gameCount: number;
-  averageRank: number;
-  topRate: number;
-  lastRate: number;
-  averageScore: number;
-  totalScore: number;
+  checkedInAt: string | null;
+  checkedOutAt: string | null;
 };
 
-export function StorePlayersClient({ players }: { players: PlayerSummary[] }) {
+export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
   const [playerState, setPlayerState] = useState(players);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
@@ -39,6 +34,8 @@ export function StorePlayersClient({ players }: { players: PlayerSummary[] }) {
                 ...player,
                 managementNumber: payload.player.managementNumber,
                 isCheckedIn: payload.player.isCheckedIn,
+                checkedInAt: payload.player.checkedInAt,
+                checkedOutAt: payload.player.checkedOutAt,
               }
             : player,
         ),
@@ -57,6 +54,10 @@ export function StorePlayersClient({ players }: { players: PlayerSummary[] }) {
     );
   }
 
+  function formatDate(value: string | null) {
+    return value ? new Date(value).toLocaleString("ja-JP") : "-";
+  }
+
   return (
     <section className="panel">
       {message ? <div className={`message ${message.type}`}>{message.text}</div> : null}
@@ -67,14 +68,9 @@ export function StorePlayersClient({ players }: { players: PlayerSummary[] }) {
               <th>状態</th>
               <th>管理番号</th>
               <th>プレイヤー</th>
-              <th>半荘数</th>
-              <th>平均順位</th>
-              <th>トップ率</th>
-              <th>ラス率</th>
-              <th>平均スコア</th>
-              <th>累計スコア</th>
+              <th>入場時刻</th>
+              <th>退場時刻</th>
               <th>操作</th>
-              <th>本人画面</th>
             </tr>
           </thead>
           <tbody>
@@ -96,12 +92,8 @@ export function StorePlayersClient({ players }: { players: PlayerSummary[] }) {
                   />
                 </td>
                 <td>{player.name}</td>
-                <td>{player.gameCount}</td>
-                <td>{player.averageRank.toFixed(2)}</td>
-                <td>{player.topRate.toFixed(1)}%</td>
-                <td>{player.lastRate.toFixed(1)}%</td>
-                <td>{player.averageScore.toFixed(1)}</td>
-                <td>{player.totalScore.toFixed(1)}</td>
+                <td>{formatDate(player.checkedInAt)}</td>
+                <td>{formatDate(player.checkedOutAt)}</td>
                 <td>
                   <button
                     className={player.isCheckedIn ? "button secondary compact" : "button compact"}
@@ -111,11 +103,6 @@ export function StorePlayersClient({ players }: { players: PlayerSummary[] }) {
                   >
                     {player.isCheckedIn ? "退場" : "入場"}
                   </button>
-                </td>
-                <td>
-                  <Link className="text-link" href={`/players?playerId=${player.id}`}>
-                    開く
-                  </Link>
                 </td>
               </tr>
             ))}

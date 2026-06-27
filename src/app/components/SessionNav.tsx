@@ -43,7 +43,8 @@ export function SessionNav({ session: initialSession }: { session: Session }) {
   return (
     <nav className="nav" aria-label="主要画面">
       <Link href="/">本部</Link>
-      <Link href="/store/players">全ユーザ成績</Link>
+      <Link href="/store/users">ユーザ管理</Link>
+      <Link href="/store/players">成績一覧</Link>
       <Link href="/tables/participants">メンバー管理</Link>
       <Link href="/results">成績入力</Link>
       <Link href="/players">プレイヤー成績</Link>

@@ -1,5 +1,5 @@
 import { AppShell } from "@/app/components/AppShell";
-import { StorePlayersClient } from "@/app/store/players/StorePlayersClient";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireStoreAdmin } from "@/lib/session";
 
@@ -9,7 +9,6 @@ type PlayerSummary = {
   id: string;
   name: string;
   managementNumber: string | null;
-  isCheckedIn: boolean;
   gameCount: number;
   averageRank: number;
   topRate: number;
@@ -33,7 +32,6 @@ export default async function StorePlayersPage() {
       id: true,
       name: true,
       managementNumber: true,
-      isCheckedIn: true,
       gamePlayers: {
         where: {
           game: { status: "FINISHED" },
@@ -60,7 +58,6 @@ export default async function StorePlayersPage() {
       id: player.id,
       name: player.name,
       managementNumber: player.managementNumber,
-      isCheckedIn: player.isCheckedIn,
       gameCount,
       averageRank: gameCount ? round(totalRank / gameCount, 2) : 0,
       topRate: gameCount ? round((topCount / gameCount) * 100, 1) : 0,
@@ -74,11 +71,48 @@ export default async function StorePlayersPage() {
     <AppShell user={user}>
       <section className="page-title">
         <div>
-          <h1>全ユーザ成績</h1>
-          <p>店舗管理者が、登録プレイヤー全員の成績を横断して確認する画面です。</p>
+          <h1>ユーザ成績一覧</h1>
+          <p>登録プレイヤー全員の成績を照会します。</p>
         </div>
       </section>
-      <StorePlayersClient players={summaries} />
+      <section className="panel">
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>管理番号</th>
+                <th>プレイヤー</th>
+                <th>半荘数</th>
+                <th>平均順位</th>
+                <th>トップ率</th>
+                <th>ラス率</th>
+                <th>平均スコア</th>
+                <th>累計スコア</th>
+                <th>本人画面</th>
+              </tr>
+            </thead>
+            <tbody>
+              {summaries.map((player) => (
+                <tr key={player.id}>
+                  <td>{player.managementNumber ?? "-"}</td>
+                  <td>{player.name}</td>
+                  <td>{player.gameCount}</td>
+                  <td>{player.averageRank.toFixed(2)}</td>
+                  <td>{player.topRate.toFixed(1)}%</td>
+                  <td>{player.lastRate.toFixed(1)}%</td>
+                  <td>{player.averageScore.toFixed(1)}</td>
+                  <td>{player.totalScore.toFixed(1)}</td>
+                  <td>
+                    <Link className="text-link" href={`/players?playerId=${player.id}`}>
+                      開く
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </AppShell>
   );
 }
