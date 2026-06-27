@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { badRequest, forbidden, notFound, unauthorized } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
+import { hashPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 
 type Params = {
@@ -26,6 +27,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     checkedInAt?: Date | null;
     checkedOutAt?: Date | null;
   } = {};
+  const password = typeof body?.password === "string" ? body.password : "";
 
   if ("name" in body) {
     const value = typeof body.name === "string" ? body.name.trim() : "";
@@ -48,6 +50,10 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     data.checkedOutAt = body.isCheckedIn ? null : new Date();
   }
 
+  if ("password" in body && password.trim().length < 4) {
+    return badRequest("パスワードは4文字以上で入力してください。");
+  }
+
   try {
     const updated = await prisma.$transaction(async (tx) => {
       const updatedPlayer = await tx.player.update({
@@ -67,6 +73,13 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         await tx.appUser.updateMany({
           where: { playerId, storeId: user.storeId },
           data: { name: data.name },
+        });
+      }
+
+      if ("password" in body) {
+        await tx.appUser.updateMany({
+          where: { playerId, storeId: user.storeId },
+          data: { passwordHash: hashPassword(password) },
         });
       }
 

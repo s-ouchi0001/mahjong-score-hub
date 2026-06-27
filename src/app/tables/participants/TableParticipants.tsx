@@ -52,19 +52,9 @@ export function TableParticipants({
     return ids;
   }, [tableState]);
 
-  const currentTableIds = useMemo(
-    () => new Set(selectedTable?.activeGame?.players.filter((player) => !player.isStaff).map((player) => player.id) ?? []),
-    [selectedTable],
-  );
-
   const unseatedPlayers = useMemo(
     () => players.filter((player) => !seatedIds.has(player.id) && !playerIds.includes(player.id)),
     [players, seatedIds, playerIds],
-  );
-
-  const selectablePlayers = useMemo(
-    () => players.filter((player) => !seatedIds.has(player.id) || currentTableIds.has(player.id) || playerIds.includes(player.id)),
-    [players, seatedIds, currentTableIds, playerIds],
   );
 
   const selectedRealPlayerIds = playerIds.filter((playerId) => playerId && playerId !== staffSeatValue && players.some((player) => player.id === playerId));
@@ -86,6 +76,15 @@ export function TableParticipants({
   function isStaffSelection(playerId: string) {
     if (playerId === staffSeatValue) return true;
     return Boolean(tableState.flatMap((table) => table.activeGame?.players ?? []).find((player) => player.id === playerId)?.isStaff);
+  }
+
+  function selectablePlayersForSeat(index: number) {
+    const currentPlayerId = playerIds[index];
+    return players.filter((player) => {
+      if (player.id === currentPlayerId) return true;
+      if (playerIds.includes(player.id)) return false;
+      return !seatedIds.has(player.id);
+    });
   }
 
   function selectTable(tableId: string) {
@@ -221,7 +220,7 @@ export function TableParticipants({
                     <option value={playerIds[index]}>スタッフ</option>
                   ) : null}
                   <option value={staffSeatValue}>スタッフ</option>
-                  {selectablePlayers.map((player) => (
+                  {selectablePlayersForSeat(index).map((player) => (
                     <option key={player.id} value={player.id}>
                       {playerLabel(player)}
                     </option>

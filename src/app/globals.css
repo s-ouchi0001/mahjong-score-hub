@@ -269,6 +269,18 @@ textarea {
   min-width: 140px;
 }
 
+.compact-input.password-input {
+  min-width: 120px;
+}
+
+.password-cell {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 250px;
+}
+
 .user-form-grid {
   display: grid;
   gap: 12px;

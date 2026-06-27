@@ -13,6 +13,7 @@ type ManagedPlayer = {
 
 export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
   const [playerState, setPlayerState] = useState(players);
+  const [passwordInputs, setPasswordInputs] = useState<Record<string, string>>({});
   const [newPlayer, setNewPlayer] = useState({
     name: "",
     managementNumber: "",
@@ -53,7 +54,7 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
     }
   }
 
-  async function updatePlayer(playerId: string, body: { name?: string; managementNumber?: string | null; isCheckedIn?: boolean }) {
+  async function updatePlayer(playerId: string, body: { name?: string; managementNumber?: string | null; isCheckedIn?: boolean; password?: string }) {
     setSavingId(playerId);
     setMessage(null);
     try {
@@ -84,6 +85,18 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
     } finally {
       setSavingId(null);
     }
+  }
+
+  async function changePassword(player: ManagedPlayer) {
+    const password = passwordInputs[player.id]?.trim() ?? "";
+    if (!password) {
+      setMessage({ type: "error", text: "新しいパスワードを入力してください。" });
+      return;
+    }
+    if (!window.confirm(`${player.name}さんのパスワードを変更します。よろしいですか？`)) return;
+
+    await updatePlayer(player.id, { password });
+    setPasswordInputs((current) => ({ ...current, [player.id]: "" }));
   }
 
   function updateLocalPlayer(playerId: string, body: Partial<ManagedPlayer>) {
@@ -141,6 +154,7 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
               <th>状態</th>
               <th>ユーザID</th>
               <th>プレイヤー</th>
+              <th>パスワード</th>
               <th>入場時刻</th>
               <th>退場時刻</th>
               <th>操作</th>
@@ -172,6 +186,27 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
                     onBlur={(event) => updatePlayer(player.id, { name: event.target.value })}
                     onChange={(event) => updateLocalPlayer(player.id, { name: event.target.value })}
                   />
+                </td>
+                <td>
+                  <div className="password-cell">
+                    <span className="muted">表示不可</span>
+                    <input
+                      aria-label={`${player.name} 新しいパスワード`}
+                      className="compact-input password-input"
+                      type="text"
+                      value={passwordInputs[player.id] ?? ""}
+                      onChange={(event) => setPasswordInputs((current) => ({ ...current, [player.id]: event.target.value }))}
+                      placeholder="新パスワード"
+                    />
+                    <button
+                      className="button secondary compact"
+                      type="button"
+                      disabled={savingId === player.id}
+                      onClick={() => changePassword(player)}
+                    >
+                      変更
+                    </button>
+                  </div>
                 </td>
                 <td>{formatDate(player.checkedInAt)}</td>
                 <td>{formatDate(player.checkedOutAt)}</td>
