@@ -10,12 +10,13 @@ type LoginFormProps = {
   role: LoginRole;
   title: string;
   description: string;
-  defaultEmail: string;
+  defaultIdentifier: string;
+  identifierLabel: string;
 };
 
-export function LoginForm({ role, title, description, defaultEmail }: LoginFormProps) {
+export function LoginForm({ role, title, description, defaultIdentifier, identifierLabel }: LoginFormProps) {
   const router = useRouter();
-  const [email, setEmail] = useState(defaultEmail);
+  const [identifier, setIdentifier] = useState(defaultIdentifier);
   const [password, setPassword] = useState("password");
   const [message, setMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -25,15 +26,19 @@ export function LoginForm({ role, title, description, defaultEmail }: LoginFormP
     setIsSaving(true);
 
     try {
-      if (!email || !password) {
-        setMessage("メールアドレスとパスワードを入力してください。");
+      if (!identifier || !password) {
+        setMessage(`${identifierLabel}とパスワードを入力してください。`);
         return;
       }
 
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, role }),
+        body: JSON.stringify({
+          password,
+          role,
+          ...(role === "PLAYER" ? { loginId: identifier } : { email: identifier }),
+        }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "ログインに失敗しました。");
@@ -61,13 +66,13 @@ export function LoginForm({ role, title, description, defaultEmail }: LoginFormP
 
       <div className="form">
         <div className="field">
-          <label htmlFor="login-email">メールアドレス</label>
+          <label htmlFor="login-identifier">{identifierLabel}</label>
           <input
-            id="login-email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            autoComplete="email"
+            id="login-identifier"
+            type={role === "PLAYER" ? "text" : "email"}
+            value={identifier}
+            onChange={(event) => setIdentifier(event.target.value)}
+            autoComplete={role === "PLAYER" ? "username" : "email"}
           />
         </div>
         <div className="field">

@@ -16,7 +16,8 @@ export default function AdminLoginPage() {
         role="STORE_ADMIN"
         title="管理者アカウント"
         description="管理者メールアドレスとパスワードでログインしてください。"
-        defaultEmail="owner@example.com"
+        defaultIdentifier="owner@example.com"
+        identifierLabel="メールアドレス"
       />
     </main>
   );

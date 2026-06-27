@@ -57,6 +57,27 @@ export async function authenticate(email: string, password: string) {
   return user;
 }
 
+export async function authenticatePlayerByLoginId(loginId: string, password: string) {
+  const users = await prisma.appUser.findMany({
+    where: {
+      role: "PLAYER",
+      player: {
+        managementNumber: loginId.trim(),
+      },
+    },
+    include: { store: true, player: true },
+    take: 2,
+  });
+
+  if (users.length > 1) return { status: "DUPLICATE" as const };
+  const user = users[0];
+  if (!user || !verifyPassword(password, user.passwordHash)) {
+    return { status: "INVALID" as const };
+  }
+
+  return { status: "OK" as const, user };
+}
+
 export async function getCurrentUser() {
   const cookieStore = await cookies();
   const userId = parseToken(cookieStore.get(cookieName)?.value);

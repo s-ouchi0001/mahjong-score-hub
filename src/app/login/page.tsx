@@ -9,7 +9,8 @@ export default function LoginPage() {
         role="PLAYER"
         title="ユーザログイン"
         description="自分の成績だけを確認できます。"
-        defaultEmail="player1@store-demo.example.com"
+        defaultIdentifier="A001"
+        identifierLabel="ユーザID"
       />
     </main>
   );
