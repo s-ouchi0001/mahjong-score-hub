@@ -4,15 +4,32 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   const tables = await prisma.mahjongTable.findMany({
     orderBy: { tableNumber: "asc" },
-    include: {
+    select: {
+      id: true,
+      tableNumber: true,
+      deviceId: true,
+      status: true,
+      connectionStatus: true,
+      lastSeenAt: true,
       games: {
         where: { status: "ACTIVE" },
         take: 1,
         orderBy: { startedAt: "desc" },
-        include: {
+        select: {
+          id: true,
+          startedAt: true,
           players: {
             orderBy: { seat: "asc" },
-            include: { player: true },
+            select: {
+              seat: true,
+              currentPoints: true,
+              player: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
           },
         },
       },

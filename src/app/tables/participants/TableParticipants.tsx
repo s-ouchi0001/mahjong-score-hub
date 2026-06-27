@@ -28,15 +28,16 @@ export function TableParticipants({
   tables: TableOption[];
   players: PlayerOption[];
 }) {
+  const [tableState, setTableState] = useState(tables);
   const [selectedTableId, setSelectedTableId] = useState(tables[0]?.id ?? "");
-  const selectedTable = tables.find((table) => table.id === selectedTableId) ?? tables[0];
+  const selectedTable = tableState.find((table) => table.id === selectedTableId) ?? tableState[0];
   const initialPlayers = selectedTable?.activeGame?.players.map((player) => player.id) ?? players.slice(0, 4).map((player) => player.id);
   const [playerIds, setPlayerIds] = useState<string[]>(initialPlayers);
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   function selectTable(tableId: string) {
-    const table = tables.find((candidate) => candidate.id === tableId);
+    const table = tableState.find((candidate) => candidate.id === tableId);
     setSelectedTableId(tableId);
     setPlayerIds(table?.activeGame?.players.map((player) => player.id) ?? players.slice(0, 4).map((player) => player.id));
     setMessage(null);
@@ -58,6 +59,24 @@ export function TableParticipants({
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "メンバー登録に失敗しました。");
+      setTableState((current) =>
+        current.map((table) =>
+          table.id === selectedTable.id
+            ? {
+                ...table,
+                status: "PLAYING",
+                activeGame: {
+                  id: payload.game.id,
+                  players: payload.game.players.map((gamePlayer: { seat: number; player: { id: string; name: string } }) => ({
+                    id: gamePlayer.player.id,
+                    name: gamePlayer.player.name,
+                    seat: gamePlayer.seat,
+                  })),
+                },
+              }
+            : table,
+        ),
+      );
       setMessage({ type: "ok", text: `${selectedTable.tableNumber}卓のメンバーを登録しました。` });
     } catch (error) {
       setMessage({ type: "error", text: error instanceof Error ? error.message : "メンバー登録に失敗しました。" });
@@ -71,7 +90,7 @@ export function TableParticipants({
       <section className="panel">
         <h2>卓を選択</h2>
         <div className="table-list">
-          {tables.map((table) => (
+          {tableState.map((table) => (
             <button
               className={table.id === selectedTableId ? "table-select active" : "table-select"}
               key={table.id}

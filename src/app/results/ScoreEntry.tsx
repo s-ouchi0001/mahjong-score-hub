@@ -15,14 +15,15 @@ type ActiveGame = {
 };
 
 export function ScoreEntry({ games }: { games: ActiveGame[] }) {
+  const [gameState, setGameState] = useState(games);
   const [gameId, setGameId] = useState(games[0]?.id ?? "");
-  const selectedGame = games.find((game) => game.id === gameId) ?? games[0];
+  const selectedGame = gameState.find((game) => game.id === gameId) ?? gameState[0];
   const [points, setPoints] = useState<number[]>(selectedGame?.players.map((player) => player.currentPoints) ?? [25000, 25000, 25000, 25000]);
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   function selectGame(nextGameId: string) {
-    const nextGame = games.find((game) => game.id === nextGameId);
+    const nextGame = gameState.find((game) => game.id === nextGameId);
     setGameId(nextGameId);
     setPoints(nextGame?.players.map((player) => player.currentPoints) ?? [25000, 25000, 25000, 25000]);
     setMessage(null);
@@ -64,6 +65,12 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "結果確定に失敗しました。");
+      setGameState((current) => {
+        const nextGames = current.filter((game) => game.id !== selectedGame.id);
+        setGameId(nextGames[0]?.id ?? "");
+        setPoints(nextGames[0]?.players.map((player) => player.currentPoints) ?? [25000, 25000, 25000, 25000]);
+        return nextGames;
+      });
       setMessage({ type: "ok", text: `${selectedGame.tableNumber}卓の結果を確定しました。` });
     } catch (error) {
       setMessage({ type: "error", text: error instanceof Error ? error.message : "結果確定に失敗しました。" });
@@ -72,7 +79,7 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
     }
   }
 
-  if (!games.length) {
+  if (!gameState.length) {
     return (
       <section className="panel">
         <p className="muted">成績入力できる対局中の卓はありません。先にメンバー管理画面で卓のメンバーを登録してください。</p>
@@ -88,7 +95,7 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
           <div className="field">
             <label htmlFor="game">卓</label>
             <select id="game" value={gameId} onChange={(event) => selectGame(event.target.value)}>
-              {games.map((game) => (
+              {gameState.map((game) => (
                 <option key={game.id} value={game.id}>
                   {game.tableNumber}卓 / {game.players.map((player) => player.name).join("・")}
                 </option>
