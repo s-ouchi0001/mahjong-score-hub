@@ -406,6 +406,40 @@ textarea {
   padding: 24px;
 }
 
+.login-card h2 {
+  font-size: 26px;
+  margin: 0 0 8px;
+}
+
+.login-description {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.player-login-page {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
+
+.player-login-page .login-card {
+  width: min(100%, 420px);
+}
+
+.admin-login-link {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}
+
+.admin-login-link:hover {
+  text-decoration: underline;
+}
+
 .login-tabs {
   background: #e8eeeb;
   border: 1px solid #d3ddd8;

@@ -1,18 +1,16 @@
-import { LoginPanel } from "@/app/login/LoginPanel";
+import { LoginForm } from "@/app/login/LoginForm";
 
 export const dynamic = "force-dynamic";
 
 export default function LoginPage() {
   return (
-    <main className="login-page">
-      <section className="login-hero">
-        <div>
-          <p className="login-kicker">Score Hub</p>
-          <h1>雀荘 成績集中管理</h1>
-          <p>店舗とプレイヤーの入口を分けて、必要な成績だけをすぐ確認できます。</p>
-        </div>
-      </section>
-      <LoginPanel />
+    <main className="login-page player-login-page">
+      <LoginForm
+        role="PLAYER"
+        title="ユーザログイン"
+        description="自分の成績だけを確認できます。"
+        defaultEmail="player1@store-demo.example.com"
+      />
     </main>
   );
 }
