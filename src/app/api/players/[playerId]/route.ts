@@ -20,11 +20,18 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   if (player.storeId !== user.storeId) return forbidden("別店舗のプレイヤーは操作できません。");
 
   const data: {
+    name?: string;
     managementNumber?: string | null;
     isCheckedIn?: boolean;
     checkedInAt?: Date | null;
     checkedOutAt?: Date | null;
   } = {};
+
+  if ("name" in body) {
+    const value = typeof body.name === "string" ? body.name.trim() : "";
+    if (!value) return badRequest("名前を入力してください。");
+    data.name = value;
+  }
 
   if ("managementNumber" in body) {
     const value = typeof body.managementNumber === "string" ? body.managementNumber.trim() : "";
@@ -41,23 +48,34 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   }
 
   try {
-    const updated = await prisma.player.update({
-      where: { id: playerId },
-      data,
-      select: {
-        id: true,
-        name: true,
-        managementNumber: true,
-        isCheckedIn: true,
-        checkedInAt: true,
-        checkedOutAt: true,
-      },
+    const updated = await prisma.$transaction(async (tx) => {
+      const updatedPlayer = await tx.player.update({
+        where: { id: playerId },
+        data,
+        select: {
+          id: true,
+          name: true,
+          managementNumber: true,
+          isCheckedIn: true,
+          checkedInAt: true,
+          checkedOutAt: true,
+        },
+      });
+
+      if (data.name) {
+        await tx.appUser.updateMany({
+          where: { playerId, storeId: user.storeId },
+          data: { name: data.name },
+        });
+      }
+
+      return updatedPlayer;
     });
 
     return NextResponse.json({ player: updated });
   } catch (error) {
     if (error instanceof Error && error.message.includes("Unique constraint")) {
-      return badRequest("この管理番号はすでに使われています。");
+      return badRequest("この名前または管理番号はすでに使われています。");
     }
     throw error;
   }

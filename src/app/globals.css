@@ -215,6 +215,27 @@ textarea {
   padding: 6px 8px;
 }
 
+.compact-input.name-input {
+  min-width: 140px;
+}
+
+.user-form-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.check-line {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.check-line input {
+  min-height: auto;
+  width: auto;
+}
+
 .button {
   align-items: center;
   background: var(--accent);
