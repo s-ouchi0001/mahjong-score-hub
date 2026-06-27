@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 type ManagedPlayer = {
   id: string;
@@ -14,6 +14,7 @@ type ManagedPlayer = {
 export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
   const [playerState, setPlayerState] = useState(players);
   const [passwordInputs, setPasswordInputs] = useState<Record<string, string>>({});
+  const [searchText, setSearchText] = useState("");
   const [newPlayer, setNewPlayer] = useState({
     name: "",
     managementNumber: "",
@@ -22,6 +23,15 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
   });
   const [savingId, setSavingId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
+  const filteredPlayers = useMemo(() => {
+    const keyword = searchText.trim().toLowerCase();
+    if (!keyword) return playerState;
+
+    return playerState.filter((player) => {
+      const status = player.isCheckedIn ? "入場中" : "退場中";
+      return [player.name, player.managementNumber ?? "", status].some((value) => value.toLowerCase().includes(keyword));
+    });
+  }, [playerState, searchText]);
 
   async function createPlayer() {
     setSavingId("new");
@@ -147,6 +157,20 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
       <section className="panel">
         <h2>登録済みユーザ</h2>
         {message ? <div className={`message ${message.type}`}>{message.text}</div> : null}
+        <div className="user-list-toolbar">
+          <div className="field">
+            <label htmlFor="user-search">ユーザ検索</label>
+            <input
+              id="user-search"
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
+              placeholder="名前・ユーザID・入場状態"
+            />
+          </div>
+          <span className="muted">
+            {filteredPlayers.length} / {playerState.length}件
+          </span>
+        </div>
         <div className="table-wrap">
         <table>
           <thead>
@@ -161,7 +185,7 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
             </tr>
           </thead>
           <tbody>
-            {playerState.map((player) => (
+            {filteredPlayers.map((player) => (
               <tr key={player.id}>
                 <td>
                   <span className={`badge ${player.isCheckedIn ? "ok" : "idle"}`}>
@@ -222,6 +246,13 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
                 </td>
               </tr>
             ))}
+            {!filteredPlayers.length ? (
+              <tr>
+                <td colSpan={7}>
+                  <span className="muted">該当するユーザはいません。</span>
+                </td>
+              </tr>
+            ) : null}
           </tbody>
         </table>
         </div>

@@ -281,6 +281,14 @@ textarea {
   min-width: 250px;
 }
 
+.user-list-toolbar {
+  align-items: end;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(220px, 360px) auto;
+  margin-bottom: 14px;
+}
+
 .user-form-grid {
   display: grid;
   gap: 12px;
@@ -655,5 +663,10 @@ textarea {
 
   .nav {
     justify-content: flex-start;
+  }
+
+  .user-list-toolbar {
+    align-items: stretch;
+    grid-template-columns: 1fr;
   }
 }
