@@ -236,6 +236,38 @@ textarea {
   gap: 10px;
 }
 
+.table-list {
+  display: grid;
+  gap: 8px;
+}
+
+.table-select {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+  min-height: 62px;
+  padding: 12px;
+  text-align: left;
+}
+
+.table-select span {
+  font-weight: 700;
+}
+
+.table-select small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.table-select.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.12);
+}
+
 .player-grid {
   display: grid;
   gap: 10px;

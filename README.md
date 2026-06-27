@@ -53,7 +53,8 @@ npm run dev
 
 - 本部ダッシュボード: `http://localhost:3000/`
 - 店舗向け全ユーザ成績: `http://localhost:3000/store/players`
-- 対局結果登録: `http://localhost:3000/results`
+- 各卓メンバー管理: `http://localhost:3000/tables/participants`
+- 各卓成績入力: `http://localhost:3000/results`
 - プレイヤー成績: `http://localhost:3000/players`
 - ログイン: `http://localhost:3000/login`
 
@@ -67,7 +68,7 @@ npm run mock:gateway -- --deviceId mock-table-1 --intervalMs 5000
 npm run mock:gateway -- --baseUrl https://your-app.vercel.app --deviceId mock-table-1
 ```
 
-先に結果登録画面で対象卓の対局を開始してください。
+先に各卓メンバー管理画面で対象卓のメンバーを登録してください。
 
 ## 画像認識結果の取り込み
 

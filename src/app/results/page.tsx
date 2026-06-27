@@ -1,5 +1,5 @@
 import { AppShell } from "@/app/components/AppShell";
-import { ResultRegistration } from "@/app/results/ResultRegistration";
+import { ScoreEntry } from "@/app/results/ScoreEntry";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "@/lib/session";
 import { redirect } from "next/navigation";
@@ -12,28 +12,36 @@ export default async function ResultsPage() {
     redirect(`/players?playerId=${session.playerId}`);
   }
 
-  const [tables, players] = await Promise.all([
-    prisma.mahjongTable.findMany({ orderBy: { tableNumber: "asc" } }),
-    prisma.player.findMany({ orderBy: { name: "asc" } }),
-  ]);
+  const games = await prisma.game.findMany({
+    where: { status: "ACTIVE" },
+    orderBy: { startedAt: "desc" },
+    include: {
+      table: true,
+      players: {
+        orderBy: { seat: "asc" },
+        include: { player: true },
+      },
+    },
+  });
 
   return (
     <AppShell>
       <section className="page-title">
         <div>
-          <h1>対局結果登録</h1>
-          <p>卓と4人を選び、最終点数から順位とスコアを自動計算して確定します。</p>
+          <h1>各卓成績入力</h1>
+          <p>対局中の卓を選び、最終点数を入力して結果を確定します。</p>
         </div>
       </section>
-      <ResultRegistration
-        tables={tables.map((table) => ({
-          id: table.id,
-          tableNumber: table.tableNumber,
-          status: table.status,
-        }))}
-        players={players.map((player) => ({
-          id: player.id,
-          name: player.name,
+      <ScoreEntry
+        games={games.map((game) => ({
+          id: game.id,
+          tableNumber: game.table.tableNumber,
+          players: game.players.map((gamePlayer) => ({
+            id: gamePlayer.player.id,
+            name: gamePlayer.player.name,
+            seat: gamePlayer.seat,
+            currentPoints: gamePlayer.currentPoints,
+          })),
         }))}
       />
     </AppShell>
