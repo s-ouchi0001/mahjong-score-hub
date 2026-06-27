@@ -26,7 +26,7 @@ export default async function TableParticipantsPage() {
               orderBy: { seat: "asc" },
               select: {
                 seat: true,
-                player: { select: { id: true, name: true } },
+                player: { select: { id: true, name: true, managementNumber: true } },
               },
             },
           },
@@ -59,6 +59,7 @@ export default async function TableParticipantsPage() {
                 players: table.games[0].players.map((gamePlayer) => ({
                   id: gamePlayer.player.id,
                   name: gamePlayer.player.name,
+                  isStaff: Boolean(gamePlayer.player.managementNumber?.startsWith("__staff_")),
                   seat: gamePlayer.seat,
                 })),
               }

@@ -11,6 +11,7 @@ type TableOption = {
     players: {
       id: string;
       name: string;
+      isStaff: boolean;
       seat: number;
     }[];
   };
@@ -23,6 +24,7 @@ type PlayerOption = {
 };
 
 const emptySeats = ["", "", "", ""];
+const staffSeatValue = "__STAFF__";
 
 export function TableParticipants({
   tables,
@@ -40,6 +42,7 @@ export function TableParticipants({
   );
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDisbanding, setIsDisbanding] = useState(false);
 
   const seatedIds = useMemo(() => {
     const ids = new Set<string>();
@@ -50,7 +53,7 @@ export function TableParticipants({
   }, [tableState]);
 
   const currentTableIds = useMemo(
-    () => new Set(selectedTable?.activeGame?.players.map((player) => player.id) ?? []),
+    () => new Set(selectedTable?.activeGame?.players.filter((player) => !player.isStaff).map((player) => player.id) ?? []),
     [selectedTable],
   );
 
@@ -64,14 +67,25 @@ export function TableParticipants({
     [players, seatedIds, currentTableIds, playerIds],
   );
 
-  const canSave = playerIds.every(Boolean) && new Set(playerIds).size === 4 && players.length >= 4;
+  const selectedRealPlayerIds = playerIds.filter((playerId) => playerId && playerId !== staffSeatValue && players.some((player) => player.id === playerId));
+  const canSave = playerIds.every(Boolean) && new Set(selectedRealPlayerIds).size === selectedRealPlayerIds.length;
 
   function playerLabel(player: PlayerOption) {
     return player.managementNumber ? `${player.managementNumber} / ${player.name}` : player.name;
   }
 
   function playerName(playerId: string) {
-    return players.find((player) => player.id === playerId)?.name ?? "未選択";
+    if (playerId === staffSeatValue) return "スタッフ";
+    return (
+      players.find((player) => player.id === playerId)?.name ??
+      tableState.flatMap((table) => table.activeGame?.players ?? []).find((player) => player.id === playerId)?.name ??
+      "未選択"
+    );
+  }
+
+  function isStaffSelection(playerId: string) {
+    if (playerId === staffSeatValue) return true;
+    return Boolean(tableState.flatMap((table) => table.activeGame?.players ?? []).find((player) => player.id === playerId)?.isStaff);
   }
 
   function selectTable(tableId: string) {
@@ -108,9 +122,10 @@ export function TableParticipants({
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "卓メンバーの保存に失敗しました。");
-      const nextPlayers = payload.game.players.map((gamePlayer: { seat: number; player: { id: string; name: string } }) => ({
+      const nextPlayers = payload.game.players.map((gamePlayer: { seat: number; player: { id: string; name: string; managementNumber: string | null } }) => ({
         id: gamePlayer.player.id,
         name: gamePlayer.player.name,
+        isStaff: Boolean(gamePlayer.player.managementNumber?.startsWith("__staff_")),
         seat: gamePlayer.seat,
       }));
       setTableState((current) =>
@@ -133,6 +148,34 @@ export function TableParticipants({
       setMessage({ type: "error", text: error instanceof Error ? error.message : "卓メンバーの保存に失敗しました。" });
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function disbandTable() {
+    if (!selectedTable) return;
+    setIsDisbanding(true);
+    setMessage(null);
+    try {
+      const response = await fetch(`/api/tables/${selectedTable.id}/disband`, { method: "POST" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "卓の解散に失敗しました。");
+      setTableState((current) =>
+        current.map((table) =>
+          table.id === selectedTable.id
+            ? {
+                ...table,
+                status: "IDLE",
+                activeGame: null,
+              }
+            : table,
+        ),
+      );
+      setPlayerIds(emptySeats);
+      setMessage({ type: "ok", text: `${selectedTable.tableNumber}卓を解散しました。` });
+    } catch (error) {
+      setMessage({ type: "error", text: error instanceof Error ? error.message : "卓の解散に失敗しました。" });
+    } finally {
+      setIsDisbanding(false);
     }
   }
 
@@ -174,6 +217,10 @@ export function TableParticipants({
                   onFocus={() => setSelectedSeat(index)}
                 >
                   <option value="">選択</option>
+                  {playerIds[index] && isStaffSelection(playerIds[index]) && playerIds[index] !== staffSeatValue ? (
+                    <option value={playerIds[index]}>スタッフ</option>
+                  ) : null}
+                  <option value={staffSeatValue}>スタッフ</option>
                   {selectablePlayers.map((player) => (
                     <option key={player.id} value={player.id}>
                       {playerLabel(player)}
@@ -189,9 +236,12 @@ export function TableParticipants({
             <button className="button" type="button" onClick={saveTableMembers} disabled={isSaving || !canSave}>
               卓メンバーを保存
             </button>
+            <button className="button secondary" type="button" onClick={disbandTable} disabled={isDisbanding || !selectedTable?.activeGame}>
+              卓を解散
+            </button>
           </div>
 
-          {!canSave ? <p className="muted">入場中で、他の卓についていないプレイヤーを4人選択してください。</p> : null}
+          {!canSave ? <p className="muted">一般ユーザは重複できません。スタッフは複数席に設定できます。</p> : null}
           {message ? <div className={`message ${message.type}`}>{message.text}</div> : null}
         </div>
       </section>

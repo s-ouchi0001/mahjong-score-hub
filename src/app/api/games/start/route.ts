@@ -3,6 +3,13 @@ import { badRequest, forbidden, notFound, unauthorized } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+const staffSeatValue = "__STAFF__";
+const staffNumberPrefix = "__staff_";
+
+function isStaffNumber(value: string | null) {
+  return Boolean(value?.startsWith(staffNumberPrefix));
+}
+
 export async function POST(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorized();
@@ -16,8 +23,8 @@ export async function POST(request: NextRequest) {
     return badRequest("tableId と playerIds 4件が必要です。");
   }
 
-  if (new Set(playerIds).size !== 4) {
-    return badRequest("プレイヤーは4人すべて別々にしてください。");
+  if (playerIds.some((playerId) => !playerId)) {
+    return badRequest("4席すべて選択してください。");
   }
 
   const table = await prisma.mahjongTable.findUnique({ where: { id: tableId } });
@@ -28,16 +35,34 @@ export async function POST(request: NextRequest) {
     return forbidden("別店舗の卓は操作できません。");
   }
 
-  const players = await prisma.player.findMany({
-    where: { id: { in: playerIds }, storeId: table.storeId, isCheckedIn: true },
+  const requestedPlayerIds = playerIds.filter((playerId) => playerId !== staffSeatValue);
+  const requestedPlayers = requestedPlayerIds.length
+    ? await prisma.player.findMany({
+        where: { id: { in: requestedPlayerIds }, storeId: table.storeId },
+      })
+    : [];
+  const requestedPlayerMap = new Map(requestedPlayers.map((player) => [player.id, player]));
+  if (requestedPlayerIds.some((playerId) => !requestedPlayerMap.has(playerId))) {
+    return badRequest("選択されたユーザが見つかりません。");
+  }
+
+  const realPlayerIds = playerIds.filter((playerId) => {
+    if (playerId === staffSeatValue) return false;
+    const player = requestedPlayerMap.get(playerId);
+    return player ? !isStaffNumber(player.managementNumber) : false;
   });
-  if (players.length !== 4) {
-    return badRequest("入場中のプレイヤーを4人選択してください。");
+  if (new Set(realPlayerIds).size !== realPlayerIds.length) {
+    return badRequest("一般ユーザは同じ卓に重複して設定できません。");
+  }
+
+  const realPlayers = realPlayerIds.map((playerId) => requestedPlayerMap.get(playerId));
+  if (realPlayers.some((player) => !player?.isCheckedIn)) {
+    return badRequest("一般ユーザは入場中の人だけ選択してください。");
   }
 
   const seatedOnOtherTable = await prisma.gamePlayer.findFirst({
     where: {
-      playerId: { in: playerIds },
+      playerId: { in: realPlayerIds },
       game: {
         status: "ACTIVE",
         tableId: { not: tableId },
@@ -53,6 +78,31 @@ export async function POST(request: NextRequest) {
     return badRequest(`${seatedOnOtherTable.player.name}さんは${seatedOnOtherTable.game.table.tableNumber}卓に着席中です。`);
   }
 
+  const resolvedPlayerIds = await Promise.all(
+    playerIds.map(async (playerId, index) => {
+      const player = requestedPlayerMap.get(playerId);
+      if (playerId !== staffSeatValue && player && !isStaffNumber(player.managementNumber)) return playerId;
+
+      const managementNumber = `${staffNumberPrefix}${tableId}_${index + 1}`;
+      const staffPlayer = await prisma.player.upsert({
+        where: {
+          storeId_managementNumber: {
+            storeId: table.storeId,
+            managementNumber,
+          },
+        },
+        update: { name: "スタッフ", isCheckedIn: false },
+        create: {
+          storeId: table.storeId,
+          name: "スタッフ",
+          managementNumber,
+          isCheckedIn: false,
+        },
+      });
+      return staffPlayer.id;
+    }),
+  );
+
   const activeGame = await prisma.game.findFirst({
     where: { tableId, status: "ACTIVE" },
   });
@@ -60,7 +110,7 @@ export async function POST(request: NextRequest) {
     const game = await prisma.$transaction(async (tx) => {
       await tx.gamePlayer.deleteMany({ where: { gameId: activeGame.id } });
       await tx.gamePlayer.createMany({
-        data: playerIds.map((playerId, index) => ({
+        data: resolvedPlayerIds.map((playerId, index) => ({
           gameId: activeGame.id,
           playerId,
           seat: index + 1,
@@ -97,7 +147,7 @@ export async function POST(request: NextRequest) {
         storeId: table.storeId,
         tableId,
         players: {
-          create: playerIds.map((playerId, index) => ({
+          create: resolvedPlayerIds.map((playerId, index) => ({
             playerId,
             seat: index + 1,
             currentPoints: 25000,

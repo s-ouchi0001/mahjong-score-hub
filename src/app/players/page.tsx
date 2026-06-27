@@ -10,7 +10,13 @@ export default async function PlayersPage() {
   const players =
     user.role === "PLAYER" && user.playerId
       ? await prisma.player.findMany({ where: { id: user.playerId }, orderBy: { name: "asc" } })
-      : await prisma.player.findMany({ where: { storeId: user.storeId }, orderBy: { name: "asc" } });
+      : await prisma.player.findMany({
+          where: {
+            storeId: user.storeId,
+            OR: [{ managementNumber: null }, { managementNumber: { not: { startsWith: "__staff_" } } }],
+          },
+          orderBy: { name: "asc" },
+        });
 
   return (
     <AppShell user={user}>

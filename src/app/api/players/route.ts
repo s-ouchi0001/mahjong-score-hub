@@ -9,7 +9,13 @@ export async function GET() {
   if (!user) return unauthorized();
 
   const players = await prisma.player.findMany({
-    where: user.role === "PLAYER" && user.playerId ? { id: user.playerId } : { storeId: user.storeId },
+    where:
+      user.role === "PLAYER" && user.playerId
+        ? { id: user.playerId }
+        : {
+            storeId: user.storeId,
+            OR: [{ managementNumber: null }, { managementNumber: { not: { startsWith: "__staff_" } } }],
+          },
     orderBy: { name: "asc" },
   });
 

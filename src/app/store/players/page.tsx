@@ -26,7 +26,10 @@ export default async function StorePlayersPage() {
   const user = await requireStoreAdmin();
 
   const players = await prisma.player.findMany({
-    where: { storeId: user.storeId },
+    where: {
+      storeId: user.storeId,
+      OR: [{ managementNumber: null }, { managementNumber: { not: { startsWith: "__staff_" } } }],
+    },
     orderBy: { name: "asc" },
     select: {
       id: true,
