@@ -28,28 +28,18 @@ type StatsPayload = {
   };
 };
 
-export function PlayerStats({ players }: { players: PlayerOption[] }) {
+export function PlayerStats({
+  players,
+  lockedPlayerId,
+}: {
+  players: PlayerOption[];
+  lockedPlayerId: string | null;
+}) {
   const searchParams = useSearchParams();
   const initialPlayerId = searchParams.get("playerId");
-  const [playerId, setPlayerId] = useState(initialPlayerId ?? players[0]?.id ?? "");
-  const [lockedPlayerId, setLockedPlayerId] = useState<string | null>(null);
+  const [playerId, setPlayerId] = useState(lockedPlayerId ?? initialPlayerId ?? players[0]?.id ?? "");
   const [payload, setPayload] = useState<StatsPayload | null>(null);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const raw = window.localStorage.getItem("mahjong-score-session");
-    if (!raw) return;
-
-    try {
-      const session = JSON.parse(raw) as { role?: string; playerId?: string };
-      if (session.role === "player" && session.playerId) {
-        setLockedPlayerId(session.playerId);
-        setPlayerId(session.playerId);
-      }
-    } catch {
-      return;
-    }
-  }, []);
 
   useEffect(() => {
     if (!playerId) return;

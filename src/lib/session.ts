@@ -1,17 +1,22 @@
-import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function getServerSession() {
-  const cookieStore = await cookies();
-  const role = cookieStore.get("mahjong-score-role")?.value;
-  const playerId = cookieStore.get("mahjong-score-player-id")?.value;
+  return getCurrentUser();
+}
 
-  if (role === "player" && playerId) {
-    return { role, playerId } as const;
+export async function requireUser() {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/login");
   }
+  return user;
+}
 
-  if (role === "store") {
-    return { role } as const;
+export async function requireStoreAdmin() {
+  const user = await requireUser();
+  if (user.role === "PLAYER" && user.playerId) {
+    redirect(`/players?playerId=${user.playerId}`);
   }
-
-  return null;
+  return user;
 }

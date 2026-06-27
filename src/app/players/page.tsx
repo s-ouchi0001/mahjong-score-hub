@@ -1,11 +1,16 @@
 import { AppShell } from "@/app/components/AppShell";
 import { PlayerStats } from "@/app/players/PlayerStats";
 import { prisma } from "@/lib/prisma";
+import { requireUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function PlayersPage() {
-  const players = await prisma.player.findMany({ orderBy: { name: "asc" } });
+  const user = await requireUser();
+  const players =
+    user.role === "PLAYER" && user.playerId
+      ? await prisma.player.findMany({ where: { id: user.playerId }, orderBy: { name: "asc" } })
+      : await prisma.player.findMany({ where: { storeId: user.storeId }, orderBy: { name: "asc" } });
 
   return (
     <AppShell>
@@ -15,7 +20,10 @@ export default async function PlayersPage() {
           <p>半荘数、平均順位、トップ率、ラス率、スコア、直近10半荘を確認します。</p>
         </div>
       </section>
-      <PlayerStats players={players.map((player) => ({ id: player.id, name: player.name }))} />
+      <PlayerStats
+        lockedPlayerId={user.role === "PLAYER" ? user.playerId : null}
+        players={players.map((player) => ({ id: player.id, name: player.name }))}
+      />
     </AppShell>
   );
 }

@@ -10,7 +10,7 @@ export type FinishResultInput = {
 export class FinishGameError extends Error {
   constructor(
     message: string,
-    public status: 400 | 404 = 400,
+    public status: 400 | 403 | 404 = 400,
   ) {
     super(message);
   }
@@ -21,11 +21,13 @@ export async function finishGameWithResults({
   results,
   source,
   payload,
+  storeId,
 }: {
   gameId: string;
   results: FinishResultInput[];
   source: ResultSource;
   payload?: Prisma.InputJsonValue;
+  storeId?: string;
 }) {
   if (!Array.isArray(results) || results.length !== 4) {
     throw new FinishGameError("results は playerId と points を持つ4件が必要です。");
@@ -42,6 +44,10 @@ export async function finishGameWithResults({
 
   if (!game) {
     throw new FinishGameError("対局が見つかりません。", 404);
+  }
+
+  if (storeId && game.storeId !== storeId) {
+    throw new FinishGameError("別店舗の対局は操作できません。", 403);
   }
 
   if (game.status === "FINISHED") {

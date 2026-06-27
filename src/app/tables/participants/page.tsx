@@ -1,19 +1,16 @@
 import { AppShell } from "@/app/components/AppShell";
 import { TableParticipants } from "@/app/tables/participants/TableParticipants";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "@/lib/session";
-import { redirect } from "next/navigation";
+import { requireStoreAdmin } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function TableParticipantsPage() {
-  const session = await getServerSession();
-  if (session?.role === "player") {
-    redirect(`/players?playerId=${session.playerId}`);
-  }
+  const user = await requireStoreAdmin();
 
   const [tables, players] = await Promise.all([
     prisma.mahjongTable.findMany({
+      where: { storeId: user.storeId },
       orderBy: { tableNumber: "asc" },
       include: {
         games: {
@@ -29,7 +26,7 @@ export default async function TableParticipantsPage() {
         },
       },
     }),
-    prisma.player.findMany({ orderBy: { name: "asc" } }),
+    prisma.player.findMany({ where: { storeId: user.storeId }, orderBy: { name: "asc" } }),
   ]);
 
   return (

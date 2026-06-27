@@ -29,6 +29,11 @@ enum ResultSource {
   IMAGE_RECOGNITION
 }
 
+enum UserRole {
+  STORE_ADMIN
+  PLAYER
+}
+
 model Store {
   id        String         @id @default(cuid())
   name      String
@@ -37,6 +42,7 @@ model Store {
   tables    MahjongTable[]
   players   Player[]
   games     Game[]
+  users     AppUser[]
 }
 
 model MahjongTable {
@@ -65,8 +71,23 @@ model Player {
   updatedAt   DateTime     @updatedAt
   store       Store        @relation(fields: [storeId], references: [id])
   gamePlayers GamePlayer[]
+  users       AppUser[]
 
   @@unique([storeId, name])
+}
+
+model AppUser {
+  id           String   @id @default(cuid())
+  storeId      String
+  playerId     String?
+  role         UserRole
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  store        Store    @relation(fields: [storeId], references: [id])
+  player       Player?  @relation(fields: [playerId], references: [id])
 }
 
 model Game {

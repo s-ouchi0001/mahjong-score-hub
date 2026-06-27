@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { notFound } from "@/lib/api";
+import { forbidden, notFound, unauthorized } from "@/lib/api";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 type Params = {
@@ -7,7 +8,13 @@ type Params = {
 };
 
 export async function GET(_request: Request, { params }: Params) {
+  const user = await getCurrentUser();
+  if (!user) return unauthorized();
+
   const { playerId } = await params;
+  if (user.role === "PLAYER" && user.playerId !== playerId) {
+    return forbidden("自分以外の成績は閲覧できません。");
+  }
 
   const player = await prisma.player.findUnique({
     where: { id: playerId },
@@ -15,6 +22,9 @@ export async function GET(_request: Request, { params }: Params) {
 
   if (!player) {
     return notFound("プレイヤーが見つかりません。");
+  }
+  if (player.storeId !== user.storeId) {
+    return forbidden("別店舗の成績は閲覧できません。");
   }
 
   const records = await prisma.gamePlayer.findMany({

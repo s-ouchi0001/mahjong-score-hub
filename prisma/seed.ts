@@ -1,65 +1,106 @@
 import { PrismaClient } from "@prisma/client";
+import { hashPassword } from "../src/lib/password";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const store = await prisma.store.upsert({
-    where: { id: "store-demo" },
-    update: {},
-    create: {
+  const stores = [
+    {
       id: "store-demo",
       name: "本部デモ店舗",
+      adminEmail: "owner@example.com",
+      tablePrefix: "mock-table",
+      players: ["佐藤", "鈴木", "高橋", "田中", "伊藤", "渡辺", "山本", "中村", "小林", "加藤", "吉田", "山田"],
     },
-  });
+    {
+      id: "store-demo-2",
+      name: "駅前デモ店舗",
+      adminEmail: "owner2@example.com",
+      tablePrefix: "mock-store2-table",
+      players: ["青木", "森", "林", "清水", "池田", "橋本", "阿部", "石川"],
+    },
+  ];
 
-  for (let i = 1; i <= 6; i += 1) {
-    await prisma.mahjongTable.upsert({
-      where: {
-        storeId_tableNumber: {
-          storeId: store.id,
-          tableNumber: i,
-        },
+  for (const storeConfig of stores) {
+    const store = await prisma.store.upsert({
+      where: { id: storeConfig.id },
+      update: { name: storeConfig.name },
+      create: {
+        id: storeConfig.id,
+        name: storeConfig.name,
       },
+    });
+
+    await prisma.appUser.upsert({
+      where: { email: storeConfig.adminEmail },
       update: {
-        deviceId: `mock-table-${i}`,
+        name: `${store.name} 管理者`,
+        role: "STORE_ADMIN",
+        storeId: store.id,
+        passwordHash: hashPassword("password"),
       },
       create: {
         storeId: store.id,
-        tableNumber: i,
-        deviceId: `mock-table-${i}`,
+        email: storeConfig.adminEmail,
+        name: `${store.name} 管理者`,
+        role: "STORE_ADMIN",
+        passwordHash: hashPassword("password"),
       },
     });
-  }
 
-  const names = [
-    "佐藤",
-    "鈴木",
-    "高橋",
-    "田中",
-    "伊藤",
-    "渡辺",
-    "山本",
-    "中村",
-    "小林",
-    "加藤",
-    "吉田",
-    "山田",
-  ];
+    for (let i = 1; i <= 6; i += 1) {
+      await prisma.mahjongTable.upsert({
+        where: {
+          storeId_tableNumber: {
+            storeId: store.id,
+            tableNumber: i,
+          },
+        },
+        update: {
+          deviceId: `${storeConfig.tablePrefix}-${i}`,
+        },
+        create: {
+          storeId: store.id,
+          tableNumber: i,
+          deviceId: `${storeConfig.tablePrefix}-${i}`,
+        },
+      });
+    }
 
-  for (const name of names) {
-    await prisma.player.upsert({
-      where: {
-        storeId_name: {
+    for (const [index, name] of storeConfig.players.entries()) {
+      const player = await prisma.player.upsert({
+        where: {
+          storeId_name: {
+            storeId: store.id,
+            name,
+          },
+        },
+        update: {},
+        create: {
           storeId: store.id,
           name,
         },
-      },
-      update: {},
-      create: {
-        storeId: store.id,
-        name,
-      },
-    });
+      });
+
+      await prisma.appUser.upsert({
+        where: { email: `player${index + 1}@${store.id}.example.com` },
+        update: {
+          name,
+          role: "PLAYER",
+          storeId: store.id,
+          playerId: player.id,
+          passwordHash: hashPassword("password"),
+        },
+        create: {
+          storeId: store.id,
+          playerId: player.id,
+          email: `player${index + 1}@${store.id}.example.com`,
+          name,
+          role: "PLAYER",
+          passwordHash: hashPassword("password"),
+        },
+      });
+    }
   }
 }
 

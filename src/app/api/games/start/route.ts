@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { badRequest, notFound } from "@/lib/api";
+import { badRequest, forbidden, notFound, unauthorized } from "@/lib/api";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
+  const user = await getCurrentUser();
+  if (!user) return unauthorized();
+  if (user.role !== "STORE_ADMIN") return forbidden();
+
   const body = await request.json().catch(() => null);
   const tableId = body?.tableId as string | undefined;
   const playerIds = body?.playerIds as string[] | undefined;
@@ -18,6 +23,9 @@ export async function POST(request: NextRequest) {
   const table = await prisma.mahjongTable.findUnique({ where: { id: tableId } });
   if (!table) {
     return notFound("卓が見つかりません。");
+  }
+  if (table.storeId !== user.storeId) {
+    return forbidden("別店舗の卓は操作できません。");
   }
 
   const players = await prisma.player.findMany({

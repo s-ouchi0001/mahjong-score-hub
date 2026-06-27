@@ -1,19 +1,15 @@
 import { AppShell } from "@/app/components/AppShell";
 import { ScoreEntry } from "@/app/results/ScoreEntry";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "@/lib/session";
-import { redirect } from "next/navigation";
+import { requireStoreAdmin } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function ResultsPage() {
-  const session = await getServerSession();
-  if (session?.role === "player") {
-    redirect(`/players?playerId=${session.playerId}`);
-  }
+  const user = await requireStoreAdmin();
 
   const games = await prisma.game.findMany({
-    where: { status: "ACTIVE" },
+    where: { storeId: user.storeId, status: "ACTIVE" },
     orderBy: { startedAt: "desc" },
     include: {
       table: true,

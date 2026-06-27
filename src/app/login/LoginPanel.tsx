@@ -1,68 +1,49 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-type PlayerOption = {
-  id: string;
-  name: string;
-};
 
 type Role = "store" | "player";
 
-export function LoginPanel({ players }: { players: PlayerOption[] }) {
+export function LoginPanel() {
   const router = useRouter();
   const [role, setRole] = useState<Role>("store");
   const [storeEmail, setStoreEmail] = useState("owner@example.com");
   const [password, setPassword] = useState("password");
-  const [playerId, setPlayerId] = useState(players[0]?.id ?? "");
+  const [playerEmail, setPlayerEmail] = useState("player1@store-demo.example.com");
   const [message, setMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  const selectedPlayer = useMemo(
-    () => players.find((player) => player.id === playerId),
-    [playerId, players],
-  );
-
-  function login() {
+  async function login() {
     setMessage("");
+    setIsSaving(true);
 
-    if (role === "store") {
-      if (!storeEmail || !password) {
+    try {
+      const email = role === "store" ? storeEmail : playerEmail;
+      if (!email || !password) {
         setMessage("メールアドレスとパスワードを入力してください。");
         return;
       }
 
-      window.localStorage.setItem(
-        "mahjong-score-session",
-        JSON.stringify({
-          role: "store",
-          name: "店舗管理者",
-          loggedInAt: new Date().toISOString(),
-        }),
-      );
-      document.cookie = "mahjong-score-role=store; path=/; max-age=2592000; SameSite=Lax";
-      document.cookie = "mahjong-score-player-id=; path=/; max-age=0; SameSite=Lax";
-      router.push("/store/players");
-      return;
-    }
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "ログインに失敗しました。");
 
-    if (!selectedPlayer) {
-      setMessage("プレイヤーを選択してください。");
-      return;
+      if (payload.user.role === "PLAYER" && payload.user.playerId) {
+        router.push(`/players?playerId=${payload.user.playerId}`);
+      } else {
+        router.push("/store/players");
+      }
+      router.refresh();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "ログインに失敗しました。");
+    } finally {
+      setIsSaving(false);
     }
-
-    window.localStorage.setItem(
-      "mahjong-score-session",
-      JSON.stringify({
-        role: "player",
-        playerId: selectedPlayer.id,
-        name: selectedPlayer.name,
-        loggedInAt: new Date().toISOString(),
-      }),
-    );
-    document.cookie = "mahjong-score-role=player; path=/; max-age=2592000; SameSite=Lax";
-    document.cookie = `mahjong-score-player-id=${selectedPlayer.id}; path=/; max-age=2592000; SameSite=Lax`;
-    router.push(`/players?playerId=${selectedPlayer.id}`);
   }
 
   return (
@@ -110,19 +91,19 @@ export function LoginPanel({ players }: { players: PlayerOption[] }) {
       ) : (
         <div className="form">
           <div className="field">
-            <label htmlFor="player">プレイヤー</label>
-            <select id="player" value={playerId} onChange={(event) => setPlayerId(event.target.value)}>
-              {players.map((player) => (
-                <option key={player.id} value={player.id}>
-                  {player.name}
-                </option>
-              ))}
-            </select>
+            <label htmlFor="player-email">メールアドレス</label>
+            <input
+              id="player-email"
+              type="email"
+              value={playerEmail}
+              onChange={(event) => setPlayerEmail(event.target.value)}
+              autoComplete="email"
+            />
           </div>
         </div>
       )}
 
-      <button className="button login-submit" type="button" onClick={login}>
+      <button className="button login-submit" type="button" onClick={login} disabled={isSaving}>
         ログイン
       </button>
 

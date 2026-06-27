@@ -6,45 +6,37 @@ import { useRouter } from "next/navigation";
 
 type Session =
   | {
-      role: "store";
+      role: "STORE_ADMIN";
       name: string;
+      storeName: string;
     }
   | {
-      role: "player";
+      role: "PLAYER";
       name: string;
       playerId: string;
+      storeName: string;
     }
   | null;
-
-function readSession(): Session {
-  const raw = window.localStorage.getItem("mahjong-score-session");
-  if (!raw) return null;
-
-  try {
-    const session = JSON.parse(raw) as Session;
-    return session;
-  } catch {
-    return null;
-  }
-}
 
 export function SessionNav() {
   const router = useRouter();
   const [session, setSession] = useState<Session>(null);
 
   useEffect(() => {
-    setSession(readSession());
+    fetch("/api/auth/me")
+      .then((response) => response.json())
+      .then((payload) => setSession(payload.user))
+      .catch(() => setSession(null));
   }, []);
 
-  function logout() {
-    window.localStorage.removeItem("mahjong-score-session");
-    document.cookie = "mahjong-score-role=; path=/; max-age=0; SameSite=Lax";
-    document.cookie = "mahjong-score-player-id=; path=/; max-age=0; SameSite=Lax";
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
     setSession(null);
     router.push("/login");
+    router.refresh();
   }
 
-  if (session?.role === "player") {
+  if (session?.role === "PLAYER") {
     return (
       <nav className="nav" aria-label="主要画面">
         <Link href={`/players?playerId=${session.playerId}`}>自分の成績</Link>
@@ -63,7 +55,7 @@ export function SessionNav() {
       <Link href="/results">成績入力</Link>
       <Link href="/players">プレイヤー成績</Link>
       <Link href="/login">ログイン</Link>
-      {session?.role === "store" ? (
+      {session?.role === "STORE_ADMIN" ? (
         <button className="nav-button" type="button" onClick={logout}>
           ログアウト
         </button>

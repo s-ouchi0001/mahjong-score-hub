@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { unauthorized } from "@/lib/api";
 
 export async function GET() {
+  const user = await getCurrentUser();
+  if (!user) return unauthorized();
+
   const games = await prisma.game.findMany({
+    where: user.role === "PLAYER" && user.playerId ? { players: { some: { playerId: user.playerId } } } : { storeId: user.storeId },
     orderBy: [{ status: "asc" }, { startedAt: "desc" }],
     include: {
       table: true,

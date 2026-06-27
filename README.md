@@ -19,14 +19,16 @@
 
 ## 環境変数
 
-`.env.example` を参考に、Vercel側に `DATABASE_URL` と `DIRECT_URL` を設定します。
+`.env.example` を参考に、Vercel側に `DATABASE_URL`、`DIRECT_URL`、`AUTH_SECRET` を設定します。
 
 ```bash
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public"
 DIRECT_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public"
+AUTH_SECRET="replace-with-a-long-random-string"
 ```
 
 Supabaseでは、アプリ実行用にPoolerの接続URLを `DATABASE_URL`、Prisma migrate用にDirect connectionのURLを `DIRECT_URL` に入れる構成が扱いやすいです。
+`AUTH_SECRET` はログインCookieの署名に使います。Vercelでは長めのランダム文字列を設定してください。
 
 ## 初回DBセットアップ
 

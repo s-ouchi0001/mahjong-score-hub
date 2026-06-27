@@ -1,7 +1,6 @@
 import { AppShell } from "@/app/components/AppShell";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "@/lib/session";
-import { redirect } from "next/navigation";
+import { requireStoreAdmin } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -21,12 +20,10 @@ function statusLabel(status: string) {
 }
 
 export default async function DashboardPage() {
-  const session = await getServerSession();
-  if (session?.role === "player") {
-    redirect(`/players?playerId=${session.playerId}`);
-  }
+  const user = await requireStoreAdmin();
 
   const tables = await prisma.mahjongTable.findMany({
+    where: { storeId: user.storeId },
     orderBy: { tableNumber: "asc" },
     include: {
       games: {

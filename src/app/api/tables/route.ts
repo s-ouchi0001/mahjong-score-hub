@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { unauthorized } from "@/lib/api";
 
 export async function GET() {
+  const user = await getCurrentUser();
+  if (!user) return unauthorized();
+
   const tables = await prisma.mahjongTable.findMany({
+    where: { storeId: user.storeId },
     orderBy: { tableNumber: "asc" },
     select: {
       id: true,

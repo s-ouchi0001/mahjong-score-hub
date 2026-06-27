@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "@/app/components/AppShell";
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "@/lib/session";
-import { redirect } from "next/navigation";
+import { requireStoreAdmin } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -23,12 +22,10 @@ function round(value: number, digits = 1) {
 }
 
 export default async function StorePlayersPage() {
-  const session = await getServerSession();
-  if (session?.role === "player") {
-    redirect(`/players?playerId=${session.playerId}`);
-  }
+  const user = await requireStoreAdmin();
 
   const players = await prisma.player.findMany({
+    where: { storeId: user.storeId },
     orderBy: { name: "asc" },
     include: {
       gamePlayers: {
