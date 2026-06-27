@@ -203,6 +203,12 @@ textarea {
   resize: vertical;
 }
 
+.compact-input {
+  min-height: 34px;
+  min-width: 92px;
+  padding: 6px 8px;
+}
+
 .button {
   align-items: center;
   background: var(--accent);
@@ -228,6 +234,12 @@ textarea {
 
 .button.secondary:hover {
   background: #d8e1dc;
+}
+
+.button.compact {
+  min-height: 34px;
+  padding: 7px 10px;
+  white-space: nowrap;
 }
 
 .actions {

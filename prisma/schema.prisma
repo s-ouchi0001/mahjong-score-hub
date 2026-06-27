@@ -65,17 +65,23 @@ model MahjongTable {
 }
 
 model Player {
-  id          String       @id @default(cuid())
-  storeId     String
-  name        String
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  store       Store        @relation(fields: [storeId], references: [id])
-  gamePlayers GamePlayer[]
-  users       AppUser[]
+  id               String       @id @default(cuid())
+  storeId          String
+  name             String
+  managementNumber String?
+  isCheckedIn      Boolean      @default(false)
+  checkedInAt      DateTime?
+  checkedOutAt     DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  store            Store        @relation(fields: [storeId], references: [id])
+  gamePlayers      GamePlayer[]
+  users            AppUser[]
 
   @@unique([storeId, name])
+  @@unique([storeId, managementNumber])
   @@index([storeId])
+  @@index([storeId, isCheckedIn])
 }
 
 model AppUser {

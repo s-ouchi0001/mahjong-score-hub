@@ -29,10 +29,10 @@ export async function POST(request: NextRequest) {
   }
 
   const players = await prisma.player.findMany({
-    where: { id: { in: playerIds }, storeId: table.storeId },
+    where: { id: { in: playerIds }, storeId: table.storeId, isCheckedIn: true },
   });
   if (players.length !== 4) {
-    return badRequest("選択されたプレイヤーを確認してください。");
+    return badRequest("入場中のプレイヤーを4人選択してください。");
   }
 
   const activeGame = await prisma.game.findFirst({

@@ -33,7 +33,11 @@ export default async function TableParticipantsPage() {
         },
       },
     }),
-    prisma.player.findMany({ where: { storeId: user.storeId }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.player.findMany({
+      where: { storeId: user.storeId, isCheckedIn: true },
+      orderBy: [{ managementNumber: "asc" }, { name: "asc" }],
+      select: { id: true, name: true, managementNumber: true },
+    }),
   ]);
 
   return (
@@ -63,6 +67,7 @@ export default async function TableParticipantsPage() {
         players={players.map((player) => ({
           id: player.id,
           name: player.name,
+          managementNumber: player.managementNumber,
         }))}
       />
     </AppShell>

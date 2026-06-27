@@ -19,6 +19,7 @@ type TableOption = {
 type PlayerOption = {
   id: string;
   name: string;
+  managementNumber: string | null;
 };
 
 export function TableParticipants({
@@ -120,7 +121,7 @@ export function TableParticipants({
                   <option value="">選択</option>
                   {players.map((player) => (
                     <option key={player.id} value={player.id}>
-                      {player.name}
+                      {player.managementNumber ? `${player.managementNumber} / ${player.name}` : player.name}
                     </option>
                   ))}
                 </select>
@@ -129,11 +130,12 @@ export function TableParticipants({
           </div>
 
           <div className="actions">
-            <button className="button" type="button" onClick={startGame} disabled={isSaving || Boolean(selectedTable?.activeGame)}>
+            <button className="button" type="button" onClick={startGame} disabled={isSaving || Boolean(selectedTable?.activeGame) || players.length < 4}>
               メンバー登録
             </button>
           </div>
 
+          {players.length < 4 ? <p className="muted">入場中のプレイヤーが4人以上必要です。全ユーザ成績画面で入場処理をしてください。</p> : null}
           {selectedTable?.activeGame ? <p className="muted">この卓は対局中です。結果入力画面で成績を確定してください。</p> : null}
           {message ? <div className={`message ${message.type}`}>{message.text}</div> : null}
         </div>
