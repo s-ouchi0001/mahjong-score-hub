@@ -35,7 +35,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
   if ("managementNumber" in body) {
     const value = typeof body.managementNumber === "string" ? body.managementNumber.trim() : "";
-    data.managementNumber = value || null;
+    if (!value) return badRequest("ユーザIDを入力してください。");
+    data.managementNumber = value;
   }
 
   if ("isCheckedIn" in body) {
@@ -75,7 +76,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     return NextResponse.json({ player: updated });
   } catch (error) {
     if (error instanceof Error && error.message.includes("Unique constraint")) {
-      return badRequest("この名前または管理番号はすでに使われています。");
+      return badRequest("この名前またはユーザIDはすでに使われています。");
     }
     throw error;
   }

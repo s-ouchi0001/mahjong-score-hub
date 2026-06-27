@@ -16,7 +16,6 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
   const [newPlayer, setNewPlayer] = useState({
     name: "",
     managementNumber: "",
-    email: "",
     password: "password",
     isCheckedIn: true,
   });
@@ -45,7 +44,7 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
           checkedOutAt: payload.player.checkedOutAt,
         },
       ]);
-      setNewPlayer({ name: "", managementNumber: "", email: "", password: "password", isCheckedIn: true });
+      setNewPlayer({ name: "", managementNumber: "", password: "password", isCheckedIn: true });
       setMessage({ type: "ok", text: "ユーザを追加しました。" });
     } catch (error) {
       setMessage({ type: "error", text: error instanceof Error ? error.message : "追加に失敗しました。" });
@@ -108,12 +107,8 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
               <input id="new-name" value={newPlayer.name} onChange={(event) => setNewPlayer((current) => ({ ...current, name: event.target.value }))} />
             </div>
             <div className="field">
-              <label htmlFor="new-number">管理番号</label>
+              <label htmlFor="new-number">ユーザID</label>
               <input id="new-number" value={newPlayer.managementNumber} onChange={(event) => setNewPlayer((current) => ({ ...current, managementNumber: event.target.value }))} />
-            </div>
-            <div className="field">
-              <label htmlFor="new-email">メール</label>
-              <input id="new-email" type="email" value={newPlayer.email} onChange={(event) => setNewPlayer((current) => ({ ...current, email: event.target.value }))} />
             </div>
             <div className="field">
               <label htmlFor="new-password">初期パスワード</label>
@@ -144,7 +139,7 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
           <thead>
             <tr>
               <th>状態</th>
-              <th>管理番号</th>
+              <th>ユーザID</th>
               <th>プレイヤー</th>
               <th>入場時刻</th>
               <th>退場時刻</th>
@@ -161,12 +156,12 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
                 </td>
                 <td>
                   <input
-                    aria-label={`${player.name} 管理番号`}
+                    aria-label={`${player.name} ユーザID`}
                     className="compact-input"
                     value={player.managementNumber ?? ""}
                     onBlur={(event) => updatePlayer(player.id, { managementNumber: event.target.value })}
                     onChange={(event) => updateLocalPlayer(player.id, { managementNumber: event.target.value })}
-                    placeholder="任意"
+                    placeholder="ログインID"
                   />
                 </td>
                 <td>

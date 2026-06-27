@@ -24,12 +24,11 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   const managementNumber = typeof body?.managementNumber === "string" ? body.managementNumber.trim() : "";
-  const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
   const password = typeof body?.password === "string" ? body.password : "password";
   const isCheckedIn = Boolean(body?.isCheckedIn);
 
   if (!name) return badRequest("名前を入力してください。");
-  if (!email) return badRequest("ログイン用メールアドレスを入力してください。");
+  if (!managementNumber) return badRequest("ユーザIDを入力してください。");
 
   try {
     const created = await prisma.$transaction(async (tx) => {
@@ -37,7 +36,7 @@ export async function POST(request: NextRequest) {
         data: {
           storeId: user.storeId,
           name,
-          managementNumber: managementNumber || null,
+          managementNumber,
           isCheckedIn,
           checkedInAt: isCheckedIn ? new Date() : null,
           checkedOutAt: isCheckedIn ? null : new Date(),
@@ -49,7 +48,7 @@ export async function POST(request: NextRequest) {
           storeId: user.storeId,
           playerId: player.id,
           role: "PLAYER",
-          email,
+          email: `${player.id}@players.internal`,
           name,
           passwordHash: hashPassword(password),
         },
@@ -61,7 +60,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ player: created }, { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.message.includes("Unique constraint")) {
-      return badRequest("同じ名前、管理番号、またはメールアドレスがすでに使われています。");
+      return badRequest("同じ名前またはユーザIDがすでに使われています。");
     }
     throw error;
   }
