@@ -21,6 +21,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  overflow-x: hidden;
 }
 
 a {
@@ -138,6 +139,11 @@ textarea {
 .grid {
   display: grid;
   gap: 16px;
+  min-width: 0;
+}
+
+.grid > * {
+  min-width: 0;
 }
 
 .grid.two {
@@ -160,6 +166,7 @@ textarea {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
+  min-width: 0;
   padding: 18px;
 }
 
@@ -169,6 +176,9 @@ textarea {
 }
 
 .table-wrap {
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
 }
 
@@ -648,6 +658,7 @@ textarea {
   .topbar {
     align-items: flex-start;
     display: grid;
+    gap: 10px;
   }
 
   .topbar-actions {
@@ -662,11 +673,120 @@ textarea {
   }
 
   .nav {
+    flex-wrap: nowrap;
     justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .nav a,
+  .nav-button {
+    flex: 0 0 auto;
   }
 
   .user-list-toolbar {
     align-items: stretch;
     grid-template-columns: 1fr;
+  }
+}
+
+
+@media (max-width: 640px) {
+  .topbar {
+    padding: 10px 12px;
+  }
+
+  .brand {
+    font-size: 15px;
+  }
+
+  .session-badge {
+    min-width: 0;
+    padding: 6px 8px;
+  }
+
+  .nav a,
+  .nav-button {
+    font-size: 12px;
+    min-height: 34px;
+    padding: 7px 9px;
+  }
+
+  .main {
+    padding: 16px 12px 28px;
+  }
+
+  .page-title {
+    margin-bottom: 14px;
+  }
+
+  .page-title h1 {
+    font-size: 22px;
+  }
+
+  .page-title p {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .panel {
+    padding: 14px;
+  }
+
+  .panel h2 {
+    font-size: 16px;
+  }
+
+  .table-wrap {
+    margin-inline: -8px;
+    padding-inline: 8px;
+  }
+
+  table {
+    min-width: 620px;
+  }
+
+  th,
+  td {
+    padding: 10px 8px;
+  }
+
+  .metric-grid,
+  .user-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions,
+  .password-cell {
+    display: grid;
+    grid-template-columns: 1fr;
+    min-width: 0;
+  }
+
+  .button,
+  .button.compact {
+    width: 100%;
+  }
+
+  .login-page {
+    min-height: 100svh;
+    padding: 16px;
+  }
+
+  .login-hero {
+    min-height: 170px;
+  }
+
+  .login-hero h1 {
+    font-size: 32px;
+  }
+
+  .login-hero p {
+    font-size: 14px;
+  }
+
+  .login-card {
+    padding: 18px;
+    width: 100%;
   }
 }
