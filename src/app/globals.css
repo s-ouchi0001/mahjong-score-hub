@@ -136,6 +136,19 @@ textarea {
   margin: 0;
 }
 
+.auto-refresh {
+  align-items: flex-end;
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+  min-width: 150px;
+}
+
+.auto-refresh small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .grid {
   display: grid;
   gap: 16px;
@@ -638,6 +651,12 @@ textarea {
     display: block;
   }
 
+  .auto-refresh {
+    align-items: flex-start;
+    justify-items: start;
+    margin-top: 12px;
+  }
+
   .login-page {
     grid-template-columns: 1fr;
   }
@@ -689,7 +708,6 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
-
 
 @media (max-width: 640px) {
   .topbar {

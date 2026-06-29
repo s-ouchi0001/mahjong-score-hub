@@ -1,4 +1,5 @@
 import { AppShell } from "@/app/components/AppShell";
+import { AutoRefresh } from "@/app/components/AutoRefresh";
 import { prisma } from "@/lib/prisma";
 import { requireStoreAdmin } from "@/lib/session";
 
@@ -55,6 +56,7 @@ export default async function DashboardPage() {
           <h1>本部ダッシュボード</h1>
           <p>各卓の状態、参加者、現在点数、通信状態を一覧で確認します。</p>
         </div>
+        <AutoRefresh />
       </section>
 
       <section className="panel">

@@ -14,6 +14,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma db push --force-reset && npm run db:seed",
     "mock:gateway": "tsx scripts/mockBluetoothGateway.ts",
+    "mock:android": "tsx scripts/mockAndroidTablet.ts",
     "mock:ocr": "tsx scripts/mockImageRecognitionResult.ts"
   },
   "dependencies": {

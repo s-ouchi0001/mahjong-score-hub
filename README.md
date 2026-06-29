@@ -72,6 +72,111 @@ npm run mock:gateway -- --baseUrl https://your-app.vercel.app --deviceId mock-ta
 
 先に各卓メンバー管理画面で対象卓のメンバーを登録してください。
 
+## Androidタブレット点数ゲートウェイ
+
+Androidタブレットで麻雀卓を常時撮影し、認識した現在点数をWebへ送るためのAPIです。
+Android側はプレイヤーIDや氏名を持たず、店舗IDと卓番号、席順の点数だけで進行中の対局へ反映できます。
+
+```text
+Androidタブレット
+  -> GET /api/android/table?deviceId=mock-table-1
+  -> 自分の店舗、卓番号、席1〜4の現在点数を取得
+  -> POST /api/android/point-update
+  -> 進行中の対局の席順へ点数を反映
+  -> 本部ダッシュボードで現在点数を確認
+```
+
+任意で `ANDROID_GATEWAY_API_KEY` を設定すると、Android側から `Authorization: Bearer <key>` または `x-api-key: <key>` を付けたリクエストだけ受け付けます。
+未設定の場合は、開発用として認証なしで受け付けます。
+
+卓情報取得:
+
+```text
+GET /api/android/table?deviceId=mock-table-1
+```
+
+Response:
+
+```json
+{
+  "store": {
+    "id": "store-demo",
+    "name": "本部デモ店舗"
+  },
+  "table": {
+    "id": "table-id",
+    "tableNumber": 1,
+    "deviceId": "mock-table-1",
+    "status": "PLAYING",
+    "connectionStatus": "ONLINE",
+    "lastSeenAt": "2026-06-27T12:00:00.000Z"
+  },
+  "activeGame": {
+    "id": "game-id",
+    "startedAt": "2026-06-27T11:30:00.000Z",
+    "seatPoints": [
+      { "seat": 1, "points": 25000 },
+      { "seat": 2, "points": 25000 },
+      { "seat": 3, "points": 25000 },
+      { "seat": 4, "points": 25000 }
+    ]
+  }
+}
+```
+
+進行中の対局がない場合、`activeGame` は `null` になります。
+
+点数送信:
+
+```text
+POST /api/android/point-update
+```
+
+Payload:
+
+```json
+{
+  "storeId": "store-demo",
+  "tableNumber": 1,
+  "deviceId": "mock-table-1",
+  "capturedAt": "2026-06-27T12:00:00.000Z",
+  "recognition": {
+    "provider": "android-camera-ocr",
+    "confidence": 0.92
+  },
+  "points": [34100, 28500, 22100, 15300]
+}
+```
+
+`points` は席1、席2、席3、席4の順です。次の形式でも送信できます。
+
+```json
+{
+  "storeId": "store-demo",
+  "tableNumber": 1,
+  "points": [
+    { "seat": 1, "points": 34100 },
+    { "seat": 2, "points": 28500 },
+    { "seat": 3, "points": 22100 },
+    { "seat": 4, "points": 15300 }
+  ]
+}
+```
+
+ローカルでAndroid送信を疑似実行する場合:
+
+```bash
+npm run mock:android -- --deviceId mock-table-1
+npm run mock:android -- --deviceId mock-table-1 --intervalMs 5000
+npm run mock:android -- --baseUrl https://your-app.vercel.app --deviceId mock-table-1 --apiKey your-key
+```
+
+先に各卓メンバー管理画面で対象卓の4席を登録してください。進行中の対局がない場合も通信状態と点数スナップショットは保存されますが、プレイヤー成績には反映されません。
+
+Androidの手入力MVPアプリは `android-tablet-gateway` にあります。
+Android Studioで `/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway` を開いて実行してください。
+本部ダッシュボードは自動更新されるため、Androidから点数を送信すると数秒後に画面へ反映されます。
+
 ## 画像認識結果の取り込み
 
 手入力確定に加えて、外部の画像認識サービスが読み取った最終点数をAPIへPOSTして確定できます。
@@ -109,6 +214,8 @@ Payload:
 - `POST /api/games/start`
 - `POST /api/games/:gameId/finish`
 - `POST /api/games/:gameId/recognized-result`
+- `GET /api/android/table`
+- `POST /api/android/point-update`
 - `POST /api/table-events/point-update`
 - `GET /api/tables`
 - `GET /api/games`
