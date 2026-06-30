@@ -45,10 +45,18 @@ function parseToken(token?: string) {
 }
 
 export async function authenticate(email: string, password: string) {
-  const user = await prisma.appUser.findUnique({
-    where: { email: email.trim().toLowerCase() },
-    include: { store: true, player: true },
-  });
+  const identifier = email.trim();
+  const user =
+    (await prisma.appUser.findUnique({
+      where: { email: identifier },
+      include: { store: true, player: true },
+    })) ??
+    (identifier === identifier.toLowerCase()
+      ? null
+      : await prisma.appUser.findUnique({
+          where: { email: identifier.toLowerCase() },
+          include: { store: true, player: true },
+        }));
 
   if (!user || !verifyPassword(password, user.passwordHash)) {
     return null;

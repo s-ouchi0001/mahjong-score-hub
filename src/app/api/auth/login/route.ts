@@ -40,12 +40,12 @@ export async function POST(request: NextRequest) {
   }
 
   if (!email) {
-    return badRequest("メールアドレスとパスワードを入力してください。");
+    return badRequest("ユーザIDとパスワードを入力してください。");
   }
 
   const user = await authenticate(email, password);
   if (!user) {
-    return badRequest("メールアドレスまたはパスワードが違います。");
+    return badRequest("ユーザIDまたはパスワードが違います。");
   }
 
   if (role === "STORE_ADMIN" && user.role !== "STORE_ADMIN") {
