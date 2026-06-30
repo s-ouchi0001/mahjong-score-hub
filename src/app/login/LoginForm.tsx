@@ -17,7 +17,7 @@ type LoginFormProps = {
 export function LoginForm({ role, title, description, defaultIdentifier, identifierLabel }: LoginFormProps) {
   const router = useRouter();
   const [identifier, setIdentifier] = useState(defaultIdentifier);
-  const [password, setPassword] = useState("password");
+  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 

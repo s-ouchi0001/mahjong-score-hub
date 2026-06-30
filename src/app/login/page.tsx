@@ -9,7 +9,7 @@ export default function LoginPage() {
         role="PLAYER"
         title="ユーザログイン"
         description="自分の成績だけを確認できます。"
-        defaultIdentifier="A001"
+        defaultIdentifier=""
         identifierLabel="ユーザID"
       />
     </main>
