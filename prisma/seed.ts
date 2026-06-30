@@ -10,6 +10,8 @@ async function main() {
       id: "store-demo",
       name: "本部デモ店舗",
       adminEmail: "owner@example.com",
+      adminLoginId: "TEST01",
+      adminPassword: "pass1",
       tablePrefix: "mock-table",
       players: ["佐藤", "鈴木", "高橋", "田中", "伊藤", "渡辺", "山本", "中村", "小林", "加藤", "吉田", "山田"],
     },
@@ -17,6 +19,8 @@ async function main() {
       id: "store-demo-2",
       name: "駅前デモ店舗",
       adminEmail: "owner2@example.com",
+      adminLoginId: "TEST02",
+      adminPassword: "pass01",
       tablePrefix: "mock-store2-table",
       players: ["青木", "森", "林", "清水", "池田", "橋本", "阿部", "石川"],
     },
@@ -46,6 +50,24 @@ async function main() {
         name: `${store.name} 管理者`,
         role: "STORE_ADMIN",
         passwordHash: hashPassword("password"),
+      },
+    });
+
+    await prisma.appUser.upsert({
+      where: { email: storeConfig.adminLoginId },
+      update: {
+        name: `${store.name} 管理者`,
+        role: "STORE_ADMIN",
+        storeId: store.id,
+        playerId: null,
+        passwordHash: hashPassword(storeConfig.adminPassword),
+      },
+      create: {
+        storeId: store.id,
+        email: storeConfig.adminLoginId,
+        name: `${store.name} 管理者`,
+        role: "STORE_ADMIN",
+        passwordHash: hashPassword(storeConfig.adminPassword),
       },
     });
 

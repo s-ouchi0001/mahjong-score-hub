@@ -11,13 +11,14 @@ type LoginFormProps = {
   title: string;
   description: string;
   defaultIdentifier: string;
+  defaultPassword?: string;
   identifierLabel: string;
 };
 
-export function LoginForm({ role, title, description, defaultIdentifier, identifierLabel }: LoginFormProps) {
+export function LoginForm({ role, title, description, defaultIdentifier, defaultPassword = "", identifierLabel }: LoginFormProps) {
   const router = useRouter();
   const [identifier, setIdentifier] = useState(defaultIdentifier);
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState(defaultPassword);
   const [message, setMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -69,10 +70,10 @@ export function LoginForm({ role, title, description, defaultIdentifier, identif
           <label htmlFor="login-identifier">{identifierLabel}</label>
           <input
             id="login-identifier"
-            type={role === "PLAYER" ? "text" : "email"}
+            type="text"
             value={identifier}
             onChange={(event) => setIdentifier(event.target.value)}
-            autoComplete={role === "PLAYER" ? "username" : "email"}
+            autoComplete="username"
           />
         </div>
         <div className="field">

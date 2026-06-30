@@ -15,9 +15,10 @@ export default function AdminLoginPage() {
       <LoginForm
         role="STORE_ADMIN"
         title="管理者アカウント"
-        description="管理者メールアドレスとパスワードでログインしてください。"
-        defaultIdentifier=""
-        identifierLabel="メールアドレス"
+        description="管理者ユーザIDとパスワードでログインしてください。"
+        defaultIdentifier="TEST01"
+        defaultPassword="pass1"
+        identifierLabel="ユーザID"
       />
     </main>
   );
