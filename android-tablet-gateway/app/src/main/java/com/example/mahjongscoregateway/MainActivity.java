@@ -8,6 +8,9 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.DashPathEffect;
 import android.graphics.Rect;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
 import android.media.Image;
 import android.os.Bundle;
 import android.os.Handler;
@@ -24,8 +27,10 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.activity.ComponentActivity;
 import androidx.annotation.NonNull;
+import androidx.camera.camera2.interop.Camera2CameraInfo;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ExperimentalGetImage;
+import androidx.camera.core.CameraInfo;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
@@ -79,16 +84,20 @@ public class MainActivity extends ComponentActivity {
     private TextView lastSendText;
     private TextView pointSummaryText;
     private TextView cameraStatusText;
+    private TextView cameraListText;
     private TextView ocrResultText;
     private PreviewView previewView;
     private RegionOverlayView regionOverlayView;
     private Button fetchButton;
     private Button sendButton;
     private Button cameraButton;
+    private Button cameraSwitchButton;
 
     private ProcessCameraProvider cameraProvider;
+    private final List<CameraOption> cameraOptions = new ArrayList<>();
     private String storeId = "";
     private int tableNumber = 0;
+    private int selectedCameraIndex = 0;
     private boolean cameraRunning = false;
     private boolean ocrBusy = false;
     private long lastOcrAt = 0;
@@ -147,6 +156,10 @@ public class MainActivity extends ComponentActivity {
 
         TextView cameraTitle = addText(root, "カメラ読み取り", 18, Color.rgb(27, 34, 31));
         cameraTitle.setPadding(0, dp(18), 0, dp(8));
+        cameraListText = addText(root, "検出カメラ: 確認中", 14, Color.rgb(27, 34, 31));
+        cameraSwitchButton = addButton(root, "使用カメラを切替");
+        cameraSwitchButton.setOnClickListener(view -> switchCamera());
+        refreshCameraOptions();
 
         SquareFrameLayout previewFrame = new SquareFrameLayout(this);
         root.addView(previewFrame, new LinearLayout.LayoutParams(
@@ -309,6 +322,126 @@ public class MainActivity extends ComponentActivity {
         return textView;
     }
 
+    private void refreshCameraOptions() {
+        cameraOptions.clear();
+        CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+
+        try {
+            for (String cameraId : cameraManager.getCameraIdList()) {
+                CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraId);
+                Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
+                cameraOptions.add(new CameraOption(cameraId, cameraFacingLabel(facing)));
+            }
+        } catch (CameraAccessException error) {
+            setCameraListText("検出カメラ: 取得できませんでした (" + error.getMessage() + ")");
+            return;
+        }
+
+        selectedCameraIndex = preferredCameraIndex();
+        updateCameraListText();
+    }
+
+    private int preferredCameraIndex() {
+        int backIndex = -1;
+        for (int i = 0; i < cameraOptions.size(); i += 1) {
+            CameraOption option = cameraOptions.get(i);
+            if (option.label.contains("外部")) {
+                return i;
+            }
+            if (backIndex < 0 && option.label.contains("背面")) {
+                backIndex = i;
+            }
+        }
+        return backIndex >= 0 ? backIndex : 0;
+    }
+
+    private String cameraFacingLabel(Integer facing) {
+        if (facing == null) {
+            return "カメラ";
+        }
+        if (facing == CameraCharacteristics.LENS_FACING_EXTERNAL) {
+            return "外部カメラ";
+        }
+        if (facing == CameraCharacteristics.LENS_FACING_BACK) {
+            return "背面カメラ";
+        }
+        if (facing == CameraCharacteristics.LENS_FACING_FRONT) {
+            return "前面カメラ";
+        }
+        return "カメラ";
+    }
+
+    private void switchCamera() {
+        if (cameraOptions.isEmpty()) {
+            refreshCameraOptions();
+            return;
+        }
+
+        selectedCameraIndex = (selectedCameraIndex + 1) % cameraOptions.size();
+        updateCameraListText();
+        boolean wasRunning = cameraRunning;
+        if (wasRunning) {
+            stopCamera();
+            startCamera();
+        }
+    }
+
+    private CameraSelector selectedCameraSelector() {
+        if (cameraOptions.isEmpty()) {
+            refreshCameraOptions();
+        }
+        if (cameraOptions.isEmpty()) {
+            return CameraSelector.DEFAULT_BACK_CAMERA;
+        }
+
+        String selectedCameraId = cameraOptions.get(selectedCameraIndex).cameraId;
+        return new CameraSelector.Builder()
+            .addCameraFilter(cameraInfos -> {
+                List<CameraInfo> matchedCameras = new ArrayList<>();
+                for (CameraInfo cameraInfo : cameraInfos) {
+                    try {
+                        if (selectedCameraId.equals(Camera2CameraInfo.from(cameraInfo).getCameraId())) {
+                            matchedCameras.add(cameraInfo);
+                        }
+                    } catch (IllegalArgumentException ignored) {
+                    }
+                }
+                return matchedCameras;
+            })
+            .build();
+    }
+
+    private String selectedCameraLabel() {
+        if (cameraOptions.isEmpty()) {
+            return "標準カメラ";
+        }
+        CameraOption option = cameraOptions.get(selectedCameraIndex);
+        return option.label + " ID:" + option.cameraId;
+    }
+
+    private void updateCameraListText() {
+        if (cameraOptions.isEmpty()) {
+            setCameraListText("検出カメラ: 見つかりません。OTG、USB接続、権限を確認してください。");
+            return;
+        }
+
+        StringBuilder builder = new StringBuilder("検出カメラ:\n");
+        for (int i = 0; i < cameraOptions.size(); i += 1) {
+            CameraOption option = cameraOptions.get(i);
+            builder.append(i == selectedCameraIndex ? "使用中: " : "候補: ");
+            builder.append(option.label).append(" ID:").append(option.cameraId);
+            if (i < cameraOptions.size() - 1) {
+                builder.append("\n");
+            }
+        }
+        setCameraListText(builder.toString());
+    }
+
+    private void setCameraListText(String message) {
+        if (cameraListText == null) return;
+        mainHandler.post(() -> cameraListText.setText(message));
+    }
+
     private void toggleCamera() {
         if (cameraRunning) {
             stopCamera();
@@ -366,7 +499,7 @@ public class MainActivity extends ComponentActivity {
                 cameraProvider.unbindAll();
                 cameraProvider.bindToLifecycle(
                     this,
-                    CameraSelector.DEFAULT_BACK_CAMERA,
+                    selectedCameraSelector(),
                     preview,
                     analysis
                 );
@@ -374,7 +507,7 @@ public class MainActivity extends ComponentActivity {
                 cameraRunning = true;
                 mainHandler.post(() -> {
                     cameraButton.setText("カメラ読み取り停止");
-                    setCameraStatus("読み取り中。中央の正方形内で、席ごとの認識範囲に入った数字を反映します。");
+                    setCameraStatus("読み取り中: " + selectedCameraLabel() + " を使用しています。");
                 });
             } catch (Exception error) {
                 setCameraStatus("カメラ起動失敗: " + error.getMessage());
@@ -837,6 +970,16 @@ public class MainActivity extends ComponentActivity {
             this.value = value;
             this.centerX = centerX;
             this.centerY = centerY;
+        }
+    }
+
+    private static class CameraOption {
+        final String cameraId;
+        final String label;
+
+        CameraOption(String cameraId, String label) {
+            this.cameraId = cameraId;
+            this.label = label;
         }
     }
 
