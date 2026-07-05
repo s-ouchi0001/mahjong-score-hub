@@ -41,7 +41,7 @@ export default async function ScoreCapturePage() {
     <AppShell user={user}>
       <section className="page-title">
         <div>
-          <h1>統合採点入力β</h1>
+          <h1>卓成績取得</h1>
           <p>点数取得、手直し、成績確定を1画面で行います。</p>
         </div>
       </section>

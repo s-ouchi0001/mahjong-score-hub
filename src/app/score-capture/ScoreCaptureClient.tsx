@@ -104,7 +104,7 @@ export function ScoreCaptureClient({ games }: { games: ScoreCaptureGame[] }) {
       type: "ok",
       text: imageUrl
         ? "画像から取得した点数候補を反映しました。内容を確認して確定してください。"
-        : "点数取得デモの候補を反映しました。内容を確認して確定してください。",
+        : "点数取得候補を反映しました。内容を確認して確定してください。",
     });
   }
 
