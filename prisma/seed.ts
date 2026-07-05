@@ -9,6 +9,7 @@ async function main() {
     {
       id: "store-demo",
       name: "本部デモ店舗",
+      storeCode: "DEMO",
       adminEmail: "owner@example.com",
       adminLoginId: "TEST01",
       adminPassword: "pass1",
@@ -18,6 +19,7 @@ async function main() {
     {
       id: "store-demo-2",
       name: "駅前デモ店舗",
+      storeCode: "EKIMAE",
       adminEmail: "owner2@example.com",
       adminLoginId: "TEST02",
       adminPassword: "pass01",
@@ -29,10 +31,11 @@ async function main() {
   for (const storeConfig of stores) {
     const store = await prisma.store.upsert({
       where: { id: storeConfig.id },
-      update: { name: storeConfig.name },
+      update: { name: storeConfig.name, storeCode: storeConfig.storeCode },
       create: {
         id: storeConfig.id,
         name: storeConfig.name,
+        storeCode: storeConfig.storeCode,
       },
     });
 
