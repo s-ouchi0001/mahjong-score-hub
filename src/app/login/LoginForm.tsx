@@ -70,7 +70,7 @@ export function LoginForm({ role, title, description, defaultIdentifier = "", de
       } else if (role === "PLAYER" && payload.user.playerId) {
         router.push(`/players?playerId=${payload.user.playerId}`);
       } else {
-        router.push("/store/users");
+        router.push("/results");
       }
       router.refresh();
     } catch (error) {

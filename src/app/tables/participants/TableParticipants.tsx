@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 type TableOption = {
@@ -44,12 +45,10 @@ export function TableParticipants({
   tournaments: TournamentOption[];
 }) {
   const [tableState, setTableState] = useState(tables);
-  const [tournamentState, setTournamentState] = useState(tournaments);
   const [selectedTableId, setSelectedTableId] = useState(tables[0]?.id ?? "");
   const selectedTable = tableState.find((table) => table.id === selectedTableId) ?? tableState[0];
   const [tableCategory, setTableCategory] = useState<"REGULAR" | "TOURNAMENT">(selectedTable?.defaultCategory ?? "REGULAR");
   const [tournamentId, setTournamentId] = useState(selectedTable?.currentTournamentId ?? "");
-  const [newTournamentName, setNewTournamentName] = useState("");
   const [selectedSeat, setSelectedSeat] = useState(0);
   const [playerIds, setPlayerIds] = useState<string[]>(
     selectedTable?.activeGame?.players.map((player) => player.id) ?? emptySeats,
@@ -201,34 +200,6 @@ export function TableParticipants({
     }
   }
 
-  async function createTournament() {
-    const name = newTournamentName.trim();
-    if (!name) {
-      setMessage({ type: "error", text: "大会名を入力してください。" });
-      return;
-    }
-    setIsSaving(true);
-    setMessage(null);
-    try {
-      const response = await fetch("/api/tournaments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
-      });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error ?? "大会作成に失敗しました。");
-      setTournamentState((current) => (current.some((tournament) => tournament.id === payload.tournament.id) ? current : [payload.tournament, ...current]));
-      setTournamentId(payload.tournament.id);
-      setTableCategory("TOURNAMENT");
-      setNewTournamentName("");
-      await saveTableSettings("TOURNAMENT", payload.tournament.id);
-    } catch (error) {
-      setMessage({ type: "error", text: error instanceof Error ? error.message : "大会作成に失敗しました。" });
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
   async function disbandTable() {
     if (!selectedTable) return;
     setIsDisbanding(true);
@@ -296,7 +267,10 @@ export function TableParticipants({
               <button
                 className={tableCategory === "TOURNAMENT" ? "active" : ""}
                 type="button"
-                onClick={() => setTableCategory("TOURNAMENT")}
+                onClick={() => {
+                  setTableCategory("TOURNAMENT");
+                  setMessage(tournaments.length ? null : { type: "error", text: "大会は設定画面で先に登録してください。" });
+                }}
               >
                 大会卓
               </button>
@@ -306,7 +280,7 @@ export function TableParticipants({
           {tableCategory === "TOURNAMENT" ? (
             <div className="field">
               <label htmlFor="tournament">大会</label>
-              <div className="inline-controls">
+              {tournaments.length ? (
                 <select
                   id="tournament"
                   value={tournamentId}
@@ -316,23 +290,17 @@ export function TableParticipants({
                   }}
                 >
                   <option value="">大会を選択</option>
-                  {tournamentState.map((tournament) => (
+                  {tournaments.map((tournament) => (
                     <option key={tournament.id} value={tournament.id}>
                       {tournament.name}
                     </option>
                   ))}
                 </select>
-                <input
-                  aria-label="新しい大会名"
-                  type="text"
-                  value={newTournamentName}
-                  onChange={(event) => setNewTournamentName(event.target.value)}
-                  placeholder="新しい大会名"
-                />
-                <button className="button secondary" type="button" onClick={createTournament} disabled={isSaving}>
-                  大会を作成
-                </button>
-              </div>
+              ) : (
+                <p className="muted">
+                  大会は<Link className="text-link" href="/store/settings">設定画面</Link>で登録してください。
+                </p>
+              )}
             </div>
           ) : null}
 

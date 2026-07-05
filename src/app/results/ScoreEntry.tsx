@@ -144,7 +144,10 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
           <div className="player-grid">
             {selectedGame.players.map((player, index) => (
               <div className="field" key={player.id}>
-                <label htmlFor={`point-${player.id}`}>{player.name} 最終点数</label>
+                <label className="point-label" htmlFor={`point-${player.id}`}>
+                  <span>{player.name} 最終点数</span>
+                  <strong>{player.seat}席</strong>
+                </label>
                 <div className="point-unit-input">
                   <input
                     id={`point-${player.id}`}
