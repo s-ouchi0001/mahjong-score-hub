@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export default async function TableParticipantsPage() {
   const user = await requireStoreAdmin();
 
-  const [tables, players] = await Promise.all([
+  const [tables, players, tournaments] = await Promise.all([
     prisma.mahjongTable.findMany({
       where: { storeId: user.storeId },
       orderBy: { tableNumber: "asc" },
@@ -16,6 +16,9 @@ export default async function TableParticipantsPage() {
         id: true,
         tableNumber: true,
         status: true,
+        defaultCategory: true,
+        currentTournamentId: true,
+        currentTournament: { select: { name: true } },
         games: {
           where: { status: "ACTIVE" },
           take: 1,
@@ -38,6 +41,11 @@ export default async function TableParticipantsPage() {
       orderBy: [{ managementNumber: "asc" }, { name: "asc" }],
       select: { id: true, name: true, managementNumber: true },
     }),
+    prisma.tournament.findMany({
+      where: { storeId: user.storeId },
+      orderBy: [{ startsAt: "desc" }, { createdAt: "desc" }],
+      select: { id: true, name: true },
+    }),
   ]);
 
   return (
@@ -53,6 +61,9 @@ export default async function TableParticipantsPage() {
           id: table.id,
           tableNumber: table.tableNumber,
           status: table.status,
+          defaultCategory: table.defaultCategory,
+          currentTournamentId: table.currentTournamentId,
+          currentTournamentName: table.currentTournament?.name ?? null,
           activeGame: table.games[0]
             ? {
                 id: table.games[0].id,
@@ -70,6 +81,7 @@ export default async function TableParticipantsPage() {
           name: player.name,
           managementNumber: player.managementNumber,
         }))}
+        tournaments={tournaments}
       />
     </AppShell>
   );

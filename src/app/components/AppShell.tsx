@@ -3,7 +3,7 @@ import { SessionNav } from "@/app/components/SessionNav";
 import { getCurrentUser } from "@/lib/auth";
 
 type ShellUser = {
-  role: "STORE_ADMIN" | "PLAYER";
+  role: "SUPER_ADMIN" | "STORE_ADMIN" | "PLAYER";
   name: string;
   store: { name: string };
   playerId: string | null;

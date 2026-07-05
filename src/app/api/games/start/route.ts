@@ -118,6 +118,14 @@ export async function POST(request: NextRequest) {
         })),
       });
 
+      await tx.game.update({
+        where: { id: activeGame.id },
+        data: {
+          category: table.defaultCategory,
+          tournamentId: table.defaultCategory === "TOURNAMENT" ? table.currentTournamentId : null,
+        },
+      });
+
       await tx.mahjongTable.update({
         where: { id: tableId },
         data: {
@@ -146,6 +154,8 @@ export async function POST(request: NextRequest) {
       data: {
         storeId: table.storeId,
         tableId,
+        category: table.defaultCategory,
+        tournamentId: table.defaultCategory === "TOURNAMENT" ? table.currentTournamentId : null,
         players: {
           create: resolvedPlayerIds.map((playerId, index) => ({
             playerId,

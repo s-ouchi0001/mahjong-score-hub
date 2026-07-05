@@ -62,6 +62,8 @@ export async function finishGameWithResults({
   }
 
   const calculated = calculateResults(results);
+  const finalCategory = category ?? game.table.defaultCategory;
+  const finalTournamentId = finalCategory === GameCategory.TOURNAMENT ? game.table.currentTournamentId : null;
 
   return prisma.$transaction(async (tx) => {
     for (const result of calculated) {
@@ -85,7 +87,8 @@ export async function finishGameWithResults({
       where: { id: gameId },
       data: {
         status: "FINISHED",
-        category: category ?? GameCategory.REGULAR,
+        category: finalCategory,
+        tournamentId: finalTournamentId,
         resultSource: source,
         resultPayload: payload ?? undefined,
         finishedAt: new Date(),

@@ -13,7 +13,9 @@ export default async function ResultsPage() {
     orderBy: { startedAt: "desc" },
     select: {
       id: true,
-      table: { select: { tableNumber: true } },
+      category: true,
+      tournament: { select: { name: true } },
+      table: { select: { tableNumber: true, defaultCategory: true, currentTournament: { select: { name: true } } } },
       players: {
         orderBy: { seat: "asc" },
         select: {
@@ -30,13 +32,15 @@ export default async function ResultsPage() {
       <section className="page-title">
         <div>
           <h1>各卓成績入力</h1>
-          <p>対局中の卓を選び、通常成績または大会成績として結果を確定します。</p>
+          <p>卓管理で設定した通常卓・大会卓に合わせて結果を確定します。</p>
         </div>
       </section>
       <ScoreEntry
         games={games.map((game) => ({
           id: game.id,
           tableNumber: game.table.tableNumber,
+          category: game.category ?? game.table.defaultCategory,
+          tournamentName: game.tournament?.name ?? game.table.currentTournament?.name ?? null,
           players: game.players.map((gamePlayer) => ({
             id: gamePlayer.player.id,
             name: gamePlayer.player.name,

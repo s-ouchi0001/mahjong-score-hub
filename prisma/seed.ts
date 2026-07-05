@@ -5,6 +5,34 @@ import { calculateResults } from "../src/lib/scoring";
 const prisma = new PrismaClient();
 
 async function main() {
+  const platformStore = await prisma.store.upsert({
+    where: { id: "store-platform" },
+    update: { name: "運営管理", storeCode: "HQ" },
+    create: {
+      id: "store-platform",
+      name: "運営管理",
+      storeCode: "HQ",
+    },
+  });
+
+  await prisma.appUser.upsert({
+    where: { email: "SUPER01" },
+    update: {
+      storeId: platformStore.id,
+      name: "スーパー管理者",
+      role: "SUPER_ADMIN",
+      playerId: null,
+      passwordHash: hashPassword("superpass1"),
+    },
+    create: {
+      storeId: platformStore.id,
+      email: "SUPER01",
+      name: "スーパー管理者",
+      role: "SUPER_ADMIN",
+      passwordHash: hashPassword("superpass1"),
+    },
+  });
+
   const stores = [
     {
       id: "store-demo",

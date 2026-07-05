@@ -6,6 +6,8 @@ import { calculateResults } from "@/lib/scoring";
 type ActiveGame = {
   id: string;
   tableNumber: number;
+  category: "REGULAR" | "TOURNAMENT";
+  tournamentName: string | null;
   players: {
     id: string;
     name: string;
@@ -14,37 +16,44 @@ type ActiveGame = {
   }[];
 };
 
-type GameCategory = "REGULAR" | "TOURNAMENT";
-
 function totalPoints(points: number[]) {
   return points.reduce((sum, point) => sum + (Number.isFinite(point) ? point : 0), 0);
+}
+
+function toPointUnits(points: number) {
+  return String(Math.trunc(points / 100));
+}
+
+function fromPointUnits(value: string) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.max(0, Math.trunc(parsed) * 100);
 }
 
 export function ScoreEntry({ games }: { games: ActiveGame[] }) {
   const [gameState, setGameState] = useState(games);
   const [gameId, setGameId] = useState(games[0]?.id ?? "");
   const selectedGame = gameState.find((game) => game.id === gameId) ?? gameState[0];
-  const [points, setPoints] = useState<number[]>(selectedGame?.players.map((player) => player.currentPoints) ?? [25000, 25000, 25000, 25000]);
-  const [category, setCategory] = useState<GameCategory>("REGULAR");
+  const [pointUnits, setPointUnits] = useState<string[]>(selectedGame?.players.map((player) => toPointUnits(player.currentPoints)) ?? ["250", "250", "250", "250"]);
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const points = pointUnits.map(fromPointUnits);
   const pointTotal = totalPoints(points);
   const isTotalOk = pointTotal === 100000;
 
   function selectGame(nextGameId: string) {
     const nextGame = gameState.find((game) => game.id === nextGameId);
     setGameId(nextGameId);
-    setPoints(nextGame?.players.map((player) => player.currentPoints) ?? [25000, 25000, 25000, 25000]);
+    setPointUnits(nextGame?.players.map((player) => toPointUnits(player.currentPoints)) ?? ["250", "250", "250", "250"]);
     setMessage(null);
   }
 
   function updatePoints(index: number, value: string) {
-    const parsed = Number(value);
-    setPoints((current) => current.map((point, currentIndex) => (currentIndex === index ? parsed : point)));
+    setPointUnits((current) => current.map((point, currentIndex) => (currentIndex === index ? value.replace(/\D/g, "") : point)));
   }
 
   function resetPoints() {
-    setPoints([25000, 25000, 25000, 25000]);
+    setPointUnits(["250", "250", "250", "250"]);
     setMessage({ type: "ok", text: "全員25,000点に戻しました。" });
   }
 
@@ -56,7 +65,7 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
         points: points[index] ?? 0,
       })),
     );
-  }, [selectedGame, points]);
+  }, [selectedGame, pointUnits]);
 
   function playerName(playerId: string) {
     return selectedGame?.players.find((player) => player.id === playerId)?.name ?? "-";
@@ -75,7 +84,6 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          category,
           results: selectedGame.players.map((player, index) => ({
             playerId: player.id,
             points: points[index],
@@ -87,11 +95,10 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
       setGameState((current) => {
         const nextGames = current.filter((game) => game.id !== selectedGame.id);
         setGameId(nextGames[0]?.id ?? "");
-        setPoints(nextGames[0]?.players.map((player) => player.currentPoints) ?? [25000, 25000, 25000, 25000]);
+        setPointUnits(nextGames[0]?.players.map((player) => toPointUnits(player.currentPoints)) ?? ["250", "250", "250", "250"]);
         return nextGames;
       });
-      setCategory("REGULAR");
-      setMessage({ type: "ok", text: `${selectedGame.tableNumber}卓の${category === "TOURNAMENT" ? "大会" : "通常"}成績を確定しました。` });
+      setMessage({ type: "ok", text: `${selectedGame.tableNumber}卓の${selectedGame.category === "TOURNAMENT" ? "大会" : "通常"}成績を確定しました。` });
     } catch (error) {
       setMessage({ type: "error", text: error instanceof Error ? error.message : "結果確定に失敗しました。" });
     } finally {
@@ -127,22 +134,10 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
           </div>
 
           <div className="field">
-            <label>成績区分</label>
-            <div className="segment-control" role="group" aria-label="成績区分">
-              <button
-                className={category === "REGULAR" ? "active" : ""}
-                type="button"
-                onClick={() => setCategory("REGULAR")}
-              >
-                通常成績
-              </button>
-              <button
-                className={category === "TOURNAMENT" ? "active" : ""}
-                type="button"
-                onClick={() => setCategory("TOURNAMENT")}
-              >
-                大会成績
-              </button>
+            <label>卓設定</label>
+            <div className="readonly-setting">
+              <strong>{selectedGame.category === "TOURNAMENT" ? "大会卓" : "通常卓"}</strong>
+              <span>{selectedGame.category === "TOURNAMENT" ? selectedGame.tournamentName ?? "大会未設定" : "卓管理で変更できます"}</span>
             </div>
           </div>
 
@@ -150,13 +145,17 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
             {selectedGame.players.map((player, index) => (
               <div className="field" key={player.id}>
                 <label htmlFor={`point-${player.id}`}>{player.name} 最終点数</label>
-                <input
-                  id={`point-${player.id}`}
-                  type="number"
-                  step="100"
-                  value={points[index] ?? 0}
-                  onChange={(event) => updatePoints(index, event.target.value)}
-                />
+                <div className="point-unit-input">
+                  <input
+                    id={`point-${player.id}`}
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={pointUnits[index] ?? "0"}
+                    onChange={(event) => updatePoints(index, event.target.value)}
+                  />
+                  <span className="fixed-point-suffix">00</span>
+                </div>
               </div>
             ))}
           </div>

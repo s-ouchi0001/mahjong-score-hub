@@ -6,8 +6,15 @@ import { useRouter } from "next/navigation";
 
 type Session =
   | {
+      role: "SUPER_ADMIN";
+      name: string;
+      playerId: string | null;
+      storeName: string;
+    }
+  | {
       role: "STORE_ADMIN";
       name: string;
+      playerId: string | null;
       storeName: string;
     }
   | {
@@ -39,6 +46,24 @@ export function SessionNav({ session: initialSession }: { session: Session }) {
         </div>
         <nav className="nav" aria-label="主要画面">
           <Link href={`/players?playerId=${session.playerId}`}>自分の成績</Link>
+          <button className="nav-button" type="button" onClick={logout}>
+            ログアウト
+          </button>
+        </nav>
+      </div>
+    );
+  }
+
+  if (session?.role === "SUPER_ADMIN") {
+    return (
+      <div className="topbar-actions">
+        <div className="session-badge" aria-label="ログイン中スーパー管理者">
+          <span>スーパー管理者</span>
+          <strong>{session.name}</strong>
+          <small>全店舗</small>
+        </div>
+        <nav className="nav" aria-label="主要画面">
+          <Link href="/super">全体管理</Link>
           <button className="nav-button" type="button" onClick={logout}>
             ログアウト
           </button>

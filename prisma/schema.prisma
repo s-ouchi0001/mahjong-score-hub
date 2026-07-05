@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -35,38 +35,44 @@ enum GameCategory {
 }
 
 enum UserRole {
+  SUPER_ADMIN
   STORE_ADMIN
   PLAYER
 }
 
 model Store {
-  id        String         @id @default(cuid())
-  name      String
-  storeCode String         @unique
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-  tables    MahjongTable[]
-  players   Player[]
-  games     Game[]
-  users     AppUser[]
+  id          String         @id @default(cuid())
+  name        String
+  storeCode   String         @unique
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  tables      MahjongTable[]
+  players     Player[]
+  games       Game[]
+  users       AppUser[]
+  tournaments Tournament[]
 }
 
 model MahjongTable {
-  id               String           @id @default(cuid())
-  storeId          String
-  tableNumber      Int
-  deviceId         String           @unique
-  status           TableStatus      @default(IDLE)
-  connectionStatus ConnectionStatus @default(OFFLINE)
-  lastSeenAt       DateTime?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  store            Store            @relation(fields: [storeId], references: [id])
-  games            Game[]
-  pointSnapshots   PointSnapshot[]
+  id                  String           @id @default(cuid())
+  storeId             String
+  tableNumber         Int
+  deviceId            String           @unique
+  status              TableStatus      @default(IDLE)
+  connectionStatus    ConnectionStatus @default(OFFLINE)
+  defaultCategory     GameCategory     @default(REGULAR)
+  currentTournamentId String?
+  lastSeenAt          DateTime?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  store               Store            @relation(fields: [storeId], references: [id])
+  currentTournament   Tournament?      @relation(fields: [currentTournamentId], references: [id])
+  games               Game[]
+  pointSnapshots      PointSnapshot[]
 
   @@unique([storeId, tableNumber])
   @@index([storeId, status])
+  @@index([currentTournamentId])
   @@map("tables")
 }
 
@@ -111,6 +117,7 @@ model Game {
   id             String          @id @default(cuid())
   storeId        String
   tableId        String
+  tournamentId   String?
   status         GameStatus      @default(ACTIVE)
   category       GameCategory    @default(REGULAR)
   resultSource   ResultSource?
@@ -121,12 +128,30 @@ model Game {
   updatedAt      DateTime        @updatedAt
   store          Store           @relation(fields: [storeId], references: [id])
   table          MahjongTable    @relation(fields: [tableId], references: [id])
+  tournament     Tournament?     @relation(fields: [tournamentId], references: [id])
   players        GamePlayer[]
   pointSnapshots PointSnapshot[]
 
   @@index([storeId, status, startedAt])
   @@index([storeId, category, status, startedAt])
+  @@index([tournamentId])
   @@index([tableId, status])
+}
+
+model Tournament {
+  id        String         @id @default(cuid())
+  storeId   String
+  name      String
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  store     Store          @relation(fields: [storeId], references: [id])
+  games     Game[]
+  tables    MahjongTable[]
+
+  @@unique([storeId, name])
+  @@index([storeId, startsAt])
 }
 
 model GamePlayer {

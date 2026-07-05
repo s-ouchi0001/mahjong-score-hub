@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { AppShell } from "@/app/components/AppShell";
 import { PlayerStats } from "@/app/players/PlayerStats";
 import { prisma } from "@/lib/prisma";
@@ -7,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function PlayersPage() {
   const user = await requireUser();
+  if (user.role === "SUPER_ADMIN") redirect("/super");
   const players =
     user.role === "PLAYER" && user.playerId
       ? await prisma.player.findMany({ where: { id: user.playerId }, orderBy: { name: "asc" } })

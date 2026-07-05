@@ -6,6 +6,9 @@ type TableOption = {
   id: string;
   tableNumber: number;
   status: string;
+  defaultCategory: "REGULAR" | "TOURNAMENT";
+  currentTournamentId: string | null;
+  currentTournamentName: string | null;
   activeGame: null | {
     id: string;
     players: {
@@ -23,19 +26,30 @@ type PlayerOption = {
   managementNumber: string | null;
 };
 
+type TournamentOption = {
+  id: string;
+  name: string;
+};
+
 const emptySeats = ["", "", "", ""];
 const staffSeatValue = "__STAFF__";
 
 export function TableParticipants({
   tables,
   players,
+  tournaments,
 }: {
   tables: TableOption[];
   players: PlayerOption[];
+  tournaments: TournamentOption[];
 }) {
   const [tableState, setTableState] = useState(tables);
+  const [tournamentState, setTournamentState] = useState(tournaments);
   const [selectedTableId, setSelectedTableId] = useState(tables[0]?.id ?? "");
   const selectedTable = tableState.find((table) => table.id === selectedTableId) ?? tableState[0];
+  const [tableCategory, setTableCategory] = useState<"REGULAR" | "TOURNAMENT">(selectedTable?.defaultCategory ?? "REGULAR");
+  const [tournamentId, setTournamentId] = useState(selectedTable?.currentTournamentId ?? "");
+  const [newTournamentName, setNewTournamentName] = useState("");
   const [selectedSeat, setSelectedSeat] = useState(0);
   const [playerIds, setPlayerIds] = useState<string[]>(
     selectedTable?.activeGame?.players.map((player) => player.id) ?? emptySeats,
@@ -58,7 +72,10 @@ export function TableParticipants({
   );
 
   const selectedRealPlayerIds = playerIds.filter((playerId) => playerId && playerId !== staffSeatValue && players.some((player) => player.id === playerId));
-  const canSave = playerIds.every(Boolean) && new Set(selectedRealPlayerIds).size === selectedRealPlayerIds.length;
+  const canSave =
+    playerIds.every(Boolean) &&
+    new Set(selectedRealPlayerIds).size === selectedRealPlayerIds.length &&
+    (tableCategory === "REGULAR" || Boolean(tournamentId));
 
   function playerLabel(player: PlayerOption) {
     return player.managementNumber ? `${player.managementNumber} / ${player.name}` : player.name;
@@ -90,6 +107,8 @@ export function TableParticipants({
   function selectTable(tableId: string) {
     const table = tableState.find((candidate) => candidate.id === tableId);
     setSelectedTableId(tableId);
+    setTableCategory(table?.defaultCategory ?? "REGULAR");
+    setTournamentId(table?.currentTournamentId ?? "");
     setPlayerIds(table?.activeGame?.players.map((player) => player.id) ?? emptySeats);
     setSelectedSeat(0);
     setMessage(null);
@@ -150,6 +169,66 @@ export function TableParticipants({
     }
   }
 
+  async function saveTableSettings(nextCategory = tableCategory, nextTournamentId = tournamentId) {
+    if (!selectedTable) return;
+    setIsSaving(true);
+    setMessage(null);
+    try {
+      const response = await fetch(`/api/tables/${selectedTable.id}/settings`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: nextCategory, tournamentId: nextCategory === "TOURNAMENT" ? nextTournamentId : null }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "卓設定の保存に失敗しました。");
+      setTableState((current) =>
+        current.map((table) =>
+          table.id === selectedTable.id
+            ? {
+                ...table,
+                defaultCategory: payload.table.defaultCategory,
+                currentTournamentId: payload.table.currentTournament?.id ?? null,
+                currentTournamentName: payload.table.currentTournament?.name ?? null,
+              }
+            : table,
+        ),
+      );
+      setMessage({ type: "ok", text: `${selectedTable.tableNumber}卓の設定を保存しました。` });
+    } catch (error) {
+      setMessage({ type: "error", text: error instanceof Error ? error.message : "卓設定の保存に失敗しました。" });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function createTournament() {
+    const name = newTournamentName.trim();
+    if (!name) {
+      setMessage({ type: "error", text: "大会名を入力してください。" });
+      return;
+    }
+    setIsSaving(true);
+    setMessage(null);
+    try {
+      const response = await fetch("/api/tournaments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "大会作成に失敗しました。");
+      setTournamentState((current) => (current.some((tournament) => tournament.id === payload.tournament.id) ? current : [payload.tournament, ...current]));
+      setTournamentId(payload.tournament.id);
+      setTableCategory("TOURNAMENT");
+      setNewTournamentName("");
+      await saveTableSettings("TOURNAMENT", payload.tournament.id);
+    } catch (error) {
+      setMessage({ type: "error", text: error instanceof Error ? error.message : "大会作成に失敗しました。" });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   async function disbandTable() {
     if (!selectedTable) return;
     setIsDisbanding(true);
@@ -200,6 +279,63 @@ export function TableParticipants({
       <section className="panel">
         <h2>{selectedTable?.tableNumber ?? "-"}卓</h2>
         <div className="form">
+          <div className="field">
+            <label>卓種別</label>
+            <div className="segment-control" role="group" aria-label="卓種別">
+              <button
+                className={tableCategory === "REGULAR" ? "active" : ""}
+                type="button"
+                onClick={() => {
+                  setTableCategory("REGULAR");
+                  setTournamentId("");
+                  void saveTableSettings("REGULAR", "");
+                }}
+              >
+                通常卓
+              </button>
+              <button
+                className={tableCategory === "TOURNAMENT" ? "active" : ""}
+                type="button"
+                onClick={() => setTableCategory("TOURNAMENT")}
+              >
+                大会卓
+              </button>
+            </div>
+          </div>
+
+          {tableCategory === "TOURNAMENT" ? (
+            <div className="field">
+              <label htmlFor="tournament">大会</label>
+              <div className="inline-controls">
+                <select
+                  id="tournament"
+                  value={tournamentId}
+                  onChange={(event) => {
+                    setTournamentId(event.target.value);
+                    void saveTableSettings("TOURNAMENT", event.target.value);
+                  }}
+                >
+                  <option value="">大会を選択</option>
+                  {tournamentState.map((tournament) => (
+                    <option key={tournament.id} value={tournament.id}>
+                      {tournament.name}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  aria-label="新しい大会名"
+                  type="text"
+                  value={newTournamentName}
+                  onChange={(event) => setNewTournamentName(event.target.value)}
+                  placeholder="新しい大会名"
+                />
+                <button className="button secondary" type="button" onClick={createTournament} disabled={isSaving}>
+                  大会を作成
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           <div className="seat-grid">
             {[0, 1, 2, 3].map((index) => (
               <div className={selectedSeat === index ? "seat-card active" : "seat-card"} key={index}>
@@ -240,7 +376,7 @@ export function TableParticipants({
             </button>
           </div>
 
-          {!canSave ? <p className="muted">一般ユーザは重複できません。スタッフは複数席に設定できます。</p> : null}
+          {!canSave ? <p className="muted">一般ユーザは重複できません。大会卓は大会を選択してください。スタッフは複数席に設定できます。</p> : null}
           {message ? <div className={`message ${message.type}`}>{message.text}</div> : null}
         </div>
       </section>

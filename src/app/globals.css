@@ -773,6 +773,54 @@ textarea {
   box-shadow: 0 1px 4px rgba(18, 50, 46, 0.12);
 }
 
+.readonly-setting {
+  align-items: center;
+  background: #f4f7f5;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  min-height: 46px;
+  padding: 10px 12px;
+}
+
+.readonly-setting span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.fixed-point-suffix {
+  align-items: center;
+  background: #eef4f1;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  display: inline-flex;
+  font-weight: 800;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 48px;
+  vertical-align: bottom;
+}
+
+.point-unit-input {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.inline-controls {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr) auto;
+}
+
+.super-layout {
+  display: grid;
+  gap: 18px;
+}
+
 .compact-segment button,
 .compact-segment a {
   min-height: 34px;
@@ -799,6 +847,10 @@ textarea {
   .table-admin-layout,
   .player-grid,
   .metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .inline-controls {
     grid-template-columns: 1fr;
   }
 

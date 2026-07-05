@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     return badRequest("ユーザIDまたはパスワードが違います。");
   }
 
-  if (role === "STORE_ADMIN" && user.role !== "STORE_ADMIN") {
+  if (role === "STORE_ADMIN" && user.role !== "STORE_ADMIN" && user.role !== "SUPER_ADMIN") {
     return badRequest("管理者用アカウントでログインしてください。");
   }
 

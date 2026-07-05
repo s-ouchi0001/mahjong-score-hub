@@ -20,7 +20,7 @@ async function readLoginResponse(response: Response) {
   if (!text) return null;
 
   try {
-    return JSON.parse(text) as { error?: string; user?: { playerId?: string | null } };
+    return JSON.parse(text) as { error?: string; user?: { role?: "SUPER_ADMIN" | "STORE_ADMIN" | "PLAYER"; playerId?: string | null } };
   } catch {
     return null;
   }
@@ -65,7 +65,9 @@ export function LoginForm({ role, title, description, defaultIdentifier = "", de
         throw new Error("ログイン情報を確認できませんでした。時間をおいて再度お試しください。");
       }
 
-      if (role === "PLAYER" && payload.user.playerId) {
+      if (payload.user.role === "SUPER_ADMIN") {
+        router.push("/super");
+      } else if (role === "PLAYER" && payload.user.playerId) {
         router.push(`/players?playerId=${payload.user.playerId}`);
       } else {
         router.push("/store/users");

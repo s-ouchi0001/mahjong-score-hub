@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GameCategory, ResultSource } from "@prisma/client";
+import { ResultSource } from "@prisma/client";
 import { badRequest, notFound } from "@/lib/api";
 import { FinishGameError, finishGameWithResults } from "@/lib/gameFinish";
 
@@ -11,7 +11,6 @@ export async function POST(request: NextRequest, { params }: Params) {
   const { gameId } = await params;
   const body = await request.json().catch(() => null);
   const results = body?.results as { playerId: string; points: number; confidence?: number }[] | undefined;
-  const category = body?.category === GameCategory.TOURNAMENT ? GameCategory.TOURNAMENT : GameCategory.REGULAR;
 
   if (!body || typeof body !== "object") {
     return badRequest("画像認識結果のJSONを送信してください。");
@@ -36,7 +35,6 @@ export async function POST(request: NextRequest, { params }: Params) {
       results: results ?? [],
       source: ResultSource.IMAGE_RECOGNITION,
       payload,
-      category,
     });
 
     return NextResponse.json({ game });
