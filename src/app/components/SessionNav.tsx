@@ -46,6 +46,7 @@ export function SessionNav({ session: initialSession }: { session: Session }) {
         </div>
         <nav className="nav" aria-label="主要画面">
           <Link href={`/players?playerId=${session.playerId}`}>自分の成績</Link>
+          <Link href="/rankings">ランキング</Link>
           <button className="nav-button" type="button" onClick={logout}>
             ログアウト
           </button>
@@ -88,6 +89,7 @@ export function SessionNav({ session: initialSession }: { session: Session }) {
         <Link href="/tables/participants">卓管理</Link>
         <Link href="/results">成績入力</Link>
         <Link href="/store/settings">設定</Link>
+        <Link href="/rankings">ランキング</Link>
         <Link href="/players">プレイヤー成績</Link>
         {session?.role === "STORE_ADMIN" ? null : <Link href="/login">ログイン</Link>}
         {session?.role === "STORE_ADMIN" ? (
