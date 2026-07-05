@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 type LoginRole = "PLAYER" | "STORE_ADMIN";
@@ -28,8 +28,9 @@ async function readLoginResponse(response: Response) {
 
 export function LoginForm({ role, title, description, defaultIdentifier = "", defaultPassword = "", identifierLabel }: LoginFormProps) {
   const router = useRouter();
-  const [storeCode, setStoreCode] = useState("");
-  const [identifier, setIdentifier] = useState(defaultIdentifier);
+  const searchParams = useSearchParams();
+  const [storeCode, setStoreCode] = useState(role === "PLAYER" ? searchParams.get("storeCode")?.toUpperCase() ?? "" : "");
+  const [identifier, setIdentifier] = useState(role === "PLAYER" ? searchParams.get("loginId") ?? defaultIdentifier : defaultIdentifier);
   const [password, setPassword] = useState(defaultPassword);
   const [message, setMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);

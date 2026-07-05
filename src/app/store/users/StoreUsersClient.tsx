@@ -11,10 +11,19 @@ type ManagedPlayer = {
   checkedOutAt: string | null;
 };
 
-export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
+export function StoreUsersClient({
+  players,
+  storeCode,
+  loginBaseUrl,
+}: {
+  players: ManagedPlayer[];
+  storeCode: string;
+  loginBaseUrl: string;
+}) {
   const [playerState, setPlayerState] = useState(players);
   const [passwordInputs, setPasswordInputs] = useState<Record<string, string>>({});
   const [searchText, setSearchText] = useState("");
+  const [qrPlayer, setQrPlayer] = useState<ManagedPlayer | null>(null);
   const [newPlayer, setNewPlayer] = useState({
     name: "",
     managementNumber: "",
@@ -119,6 +128,17 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
     return value ? new Date(value).toLocaleString("ja-JP") : "-";
   }
 
+  function loginUrl(player: ManagedPlayer) {
+    const url = new URL(loginBaseUrl);
+    url.searchParams.set("storeCode", storeCode);
+    url.searchParams.set("loginId", player.managementNumber ?? "");
+    return url.toString();
+  }
+
+  function qrImageUrl(player: ManagedPlayer) {
+    return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=12&data=${encodeURIComponent(loginUrl(player))}`;
+  }
+
   return (
     <div className="grid">
       <section className="panel">
@@ -181,6 +201,7 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
               <th>パスワード</th>
               <th>入場時刻</th>
               <th>退場時刻</th>
+              <th>QR</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -237,6 +258,16 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
                 <td>{formatDate(player.checkedOutAt)}</td>
                 <td>
                   <button
+                    className="button secondary compact"
+                    type="button"
+                    disabled={!player.managementNumber}
+                    onClick={() => setQrPlayer(player)}
+                  >
+                    QR
+                  </button>
+                </td>
+                <td>
+                  <button
                     className={player.isCheckedIn ? "button secondary compact" : "button compact"}
                     type="button"
                     disabled={savingId === player.id}
@@ -249,7 +280,7 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
             ))}
             {!filteredPlayers.length ? (
               <tr>
-                <td colSpan={7}>
+                <td colSpan={8}>
                   <span className="muted">該当するユーザはいません。</span>
                 </td>
               </tr>
@@ -258,6 +289,38 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
         </table>
         </div>
       </section>
+      {qrPlayer ? (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={`${qrPlayer.name} ログインQR`}>
+          <section className="modal-panel">
+            <div className="list-header">
+              <div>
+                <h2>{qrPlayer.name} ログインQR</h2>
+                <p className="muted">店舗IDとユーザIDを入力済みのログインURLです。</p>
+              </div>
+              <button className="button secondary compact" type="button" onClick={() => setQrPlayer(null)}>
+                閉じる
+              </button>
+            </div>
+            <div className="qr-layout">
+              <img src={qrImageUrl(qrPlayer)} alt={`${qrPlayer.name} ログインQR`} width={220} height={220} />
+              <div className="form">
+                <div className="field">
+                  <label>店舗ID</label>
+                  <input readOnly value={storeCode} />
+                </div>
+                <div className="field">
+                  <label>ユーザID</label>
+                  <input readOnly value={qrPlayer.managementNumber ?? ""} />
+                </div>
+                <div className="field">
+                  <label>URL</label>
+                  <textarea readOnly rows={3} value={loginUrl(qrPlayer)} />
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      ) : null}
       </div>
   );
 }
