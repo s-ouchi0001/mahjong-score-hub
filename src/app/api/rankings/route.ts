@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return unauthorized();
 
-  const mode = request.nextUrl.searchParams.get("mode") === "tournament" ? "tournament" : "regular";
+  const mode = request.nextUrl.searchParams.get("mode") === "tournament" ? "tournament" : "total";
   const players = await prisma.player.findMany({
     where: {
       storeId: user.storeId,
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
         where: {
           game: {
             status: "FINISHED",
-            category: mode === "tournament" ? GameCategory.TOURNAMENT : GameCategory.REGULAR,
+            ...(mode === "tournament" ? { category: GameCategory.TOURNAMENT } : {}),
           },
           rank: { not: null },
           score: { not: null },
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
         ...rating,
       };
     })
-    .sort((a, b) => b.jankiPoint - a.jankiPoint || b.totalScore - a.totalScore)
+    .sort((a, b) => (mode === "tournament" ? b.totalScore - a.totalScore : b.jankiPoint - a.jankiPoint || b.totalScore - a.totalScore))
     .map((player, index) => ({ ...player, rank: index + 1 }));
 
   return NextResponse.json({ mode, rankings });

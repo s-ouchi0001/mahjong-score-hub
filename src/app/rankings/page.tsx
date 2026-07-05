@@ -8,7 +8,7 @@ import { requireUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
-type RankingMode = "regular" | "tournament";
+type RankingMode = "total" | "tournament";
 
 function round(value: number, digits = 1) {
   const scale = 10 ** digits;
@@ -17,7 +17,7 @@ function round(value: number, digits = 1) {
 
 function resolveMode(value: string | string[] | undefined): RankingMode {
   const mode = Array.isArray(value) ? value[0] : value;
-  return mode === "tournament" ? "tournament" : "regular";
+  return mode === "tournament" ? "tournament" : "total";
 }
 
 export default async function RankingsPage({
@@ -43,7 +43,7 @@ export default async function RankingsPage({
         where: {
           game: {
             status: "FINISHED",
-            category: mode === "tournament" ? GameCategory.TOURNAMENT : GameCategory.REGULAR,
+            ...(mode === "tournament" ? { category: GameCategory.TOURNAMENT } : {}),
           },
           rank: { not: null },
           score: { not: null },
@@ -76,7 +76,7 @@ export default async function RankingsPage({
         ...buildRating(summary),
       };
     })
-    .sort((a, b) => b.jankiPoint - a.jankiPoint || b.totalScore - a.totalScore)
+    .sort((a, b) => (mode === "tournament" ? b.totalScore - a.totalScore : b.jankiPoint - a.jankiPoint || b.totalScore - a.totalScore))
     .map((player, index) => ({ ...player, rank: index + 1 }));
 
   return (
@@ -84,14 +84,14 @@ export default async function RankingsPage({
       <section className="page-title">
         <div>
           <h1>ランキング</h1>
-          <p>同じ雀荘の通常ランキングと大会ランキングを確認します。</p>
+          <p>同じ雀荘の通算ランキングと大会別ランキングを確認します。</p>
         </div>
         <div className="segment-control compact-segment" role="group" aria-label="ランキング表示">
-          <Link className={mode === "regular" ? "active" : ""} href="/rankings">
-            通常
+          <Link className={mode === "total" ? "active" : ""} href="/rankings">
+            通算
           </Link>
           <Link className={mode === "tournament" ? "active" : ""} href="/rankings?mode=tournament">
-            大会
+            大会別
           </Link>
         </div>
       </section>
@@ -103,8 +103,8 @@ export default async function RankingsPage({
               <tr>
                 <th>順位</th>
                 <th>プレイヤー</th>
-                <th>段位</th>
-                <th>雀力P</th>
+                {mode === "total" ? <th>段位</th> : null}
+                {mode === "total" ? <th>雀力P</th> : null}
                 <th>半荘数</th>
                 <th>平均順位</th>
                 <th>トップ率</th>
@@ -118,8 +118,8 @@ export default async function RankingsPage({
                   <tr key={player.id} className={player.id === user.playerId ? "highlight-row" : ""}>
                     <td>{player.rank}位</td>
                     <td>{player.managementNumber ? `${player.managementNumber} / ${player.name}` : player.name}</td>
-                    <td>{player.dan}</td>
-                    <td>{player.jankiPoint.toLocaleString()}</td>
+                    {mode === "total" ? <td>{player.dan}</td> : null}
+                    {mode === "total" ? <td>{player.jankiPoint.toLocaleString()}</td> : null}
                     <td>{player.gameCount}</td>
                     <td>{player.averageRank.toFixed(2)}</td>
                     <td>{player.topRate.toFixed(1)}%</td>
@@ -129,7 +129,7 @@ export default async function RankingsPage({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={9} className="muted">
+                  <td colSpan={mode === "total" ? 9 : 7} className="muted">
                     まだランキング対象の成績がありません。
                   </td>
                 </tr>
