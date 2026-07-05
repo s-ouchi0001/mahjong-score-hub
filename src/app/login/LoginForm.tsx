@@ -17,6 +17,7 @@ type LoginFormProps = {
 
 export function LoginForm({ role, title, description, defaultIdentifier = "", defaultPassword = "", identifierLabel }: LoginFormProps) {
   const router = useRouter();
+  const [storeCode, setStoreCode] = useState("");
   const [identifier, setIdentifier] = useState(defaultIdentifier);
   const [password, setPassword] = useState(defaultPassword);
   const [message, setMessage] = useState("");
@@ -27,6 +28,10 @@ export function LoginForm({ role, title, description, defaultIdentifier = "", de
     setIsSaving(true);
 
     try {
+      if (role === "PLAYER" && !storeCode.trim()) {
+        setMessage("店舗IDを入力してください。");
+        return;
+      }
       if (!identifier || !password) {
         setMessage(`${identifierLabel}とパスワードを入力してください。`);
         return;
@@ -38,7 +43,7 @@ export function LoginForm({ role, title, description, defaultIdentifier = "", de
         body: JSON.stringify({
           password,
           role,
-          ...(role === "PLAYER" ? { loginId: identifier } : { email: identifier }),
+          ...(role === "PLAYER" ? { storeCode, loginId: identifier } : { email: identifier }),
         }),
       });
       const payload = await response.json();
@@ -66,6 +71,19 @@ export function LoginForm({ role, title, description, defaultIdentifier = "", de
       </div>
 
       <div className="form">
+        {role === "PLAYER" ? (
+          <div className="field">
+            <label htmlFor="login-store-code">店舗ID</label>
+            <input
+              id="login-store-code"
+              type="text"
+              value={storeCode}
+              onChange={(event) => setStoreCode(event.target.value.toUpperCase())}
+              autoComplete="organization"
+              placeholder="例: DEMO"
+            />
+          </div>
+        ) : null}
         <div className="field">
           <label htmlFor="login-identifier">{identifierLabel}</label>
           <input
