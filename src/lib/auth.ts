@@ -69,20 +69,20 @@ export async function authenticate(email: string, password: string) {
   return user;
 }
 
-export async function authenticatePlayerByLoginId(loginId: string, password: string) {
-  const users = await prisma.appUser.findMany({
+export async function authenticatePlayerByLoginId(storeCode: string, loginId: string, password: string) {
+  const user = await prisma.appUser.findFirst({
     where: {
       role: "PLAYER",
+      store: {
+        storeCode: storeCode.trim().toUpperCase(),
+      },
       player: {
         managementNumber: loginId.trim(),
       },
     },
     include: { store: true, player: true },
-    take: 2,
   });
 
-  if (users.length > 1) return { status: "DUPLICATE" as const };
-  const user = users[0];
   if (!user || !verifyPassword(password, user.passwordHash)) {
     return { status: "INVALID" as const };
   }
