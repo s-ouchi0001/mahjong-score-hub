@@ -10,12 +10,12 @@ type LoginFormProps = {
   role: LoginRole;
   title: string;
   description: string;
-  defaultIdentifier: string;
+  defaultIdentifier?: string;
   defaultPassword?: string;
   identifierLabel: string;
 };
 
-export function LoginForm({ role, title, description, defaultIdentifier, defaultPassword = "", identifierLabel }: LoginFormProps) {
+export function LoginForm({ role, title, description, defaultIdentifier = "", defaultPassword = "", identifierLabel }: LoginFormProps) {
   const router = useRouter();
   const [identifier, setIdentifier] = useState(defaultIdentifier);
   const [password, setPassword] = useState(defaultPassword);

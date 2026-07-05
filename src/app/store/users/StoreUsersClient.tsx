@@ -18,7 +18,7 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
   const [newPlayer, setNewPlayer] = useState({
     name: "",
     managementNumber: "",
-    password: "password",
+    password: "",
     isCheckedIn: true,
   });
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -55,7 +55,7 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
           checkedOutAt: payload.player.checkedOutAt,
         },
       ]);
-      setNewPlayer({ name: "", managementNumber: "", password: "password", isCheckedIn: true });
+      setNewPlayer({ name: "", managementNumber: "", password: "", isCheckedIn: true });
       setMessage({ type: "ok", text: "ユーザを追加しました。" });
     } catch (error) {
       setMessage({ type: "error", text: error instanceof Error ? error.message : "追加に失敗しました。" });
@@ -135,7 +135,7 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
             </div>
             <div className="field">
               <label htmlFor="new-password">初期パスワード</label>
-              <input id="new-password" type="text" value={newPlayer.password} onChange={(event) => setNewPlayer((current) => ({ ...current, password: event.target.value }))} />
+              <input id="new-password" type="password" value={newPlayer.password} onChange={(event) => setNewPlayer((current) => ({ ...current, password: event.target.value }))} autoComplete="new-password" />
             </div>
           </div>
           <label className="check-line">
@@ -217,10 +217,11 @@ export function StoreUsersClient({ players }: { players: ManagedPlayer[] }) {
                     <input
                       aria-label={`${player.name} 新しいパスワード`}
                       className="compact-input password-input"
-                      type="text"
+                      type="password"
                       value={passwordInputs[player.id] ?? ""}
                       onChange={(event) => setPasswordInputs((current) => ({ ...current, [player.id]: event.target.value }))}
                       placeholder="新パスワード"
+                      autoComplete="new-password"
                     />
                     <button
                       className="button secondary compact"

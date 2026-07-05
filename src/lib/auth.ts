@@ -7,7 +7,11 @@ const cookieName = "mahjong-score-session";
 const maxAgeSeconds = 60 * 60 * 24 * 30;
 
 function secret() {
-  return process.env.AUTH_SECRET || "dev-only-change-me";
+  const value = process.env.AUTH_SECRET;
+  if (!value && process.env.NODE_ENV === "production") {
+    throw new Error("AUTH_SECRET を設定してください。");
+  }
+  return value || "dev-only-change-me";
 }
 
 function base64Url(input: string) {

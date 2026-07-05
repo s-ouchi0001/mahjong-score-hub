@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "雀荘 成績集中管理PoC",
-  description: "各卓の対局結果を本部画面に集約するPoC",
+  title: "雀荘 成績管理クラウド",
+  description: "雀荘のユーザ管理、卓管理、成績入力、プレイヤー成績閲覧をまとめて管理します。",
 };
 
 export default function RootLayout({
