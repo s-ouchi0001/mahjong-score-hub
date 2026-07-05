@@ -22,7 +22,7 @@ export async function AppShell({
     <div className="shell">
       <header className="topbar">
         <Link className="brand" href="/">
-          雀荘 成績集中管理PoC
+          雀荘 成績管理クラウド
         </Link>
         <SessionNav
           session={

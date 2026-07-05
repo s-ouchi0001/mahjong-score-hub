@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { GameCategory } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
 import { forbidden, notFound, unauthorized } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -7,7 +8,14 @@ type Params = {
   params: Promise<{ playerId: string }>;
 };
 
-export async function GET(_request: Request, { params }: Params) {
+type StatsMode = "total" | "recent" | "tournament";
+
+function resolveMode(value: string | null): StatsMode {
+  if (value === "recent" || value === "tournament") return value;
+  return "total";
+}
+
+export async function GET(request: NextRequest, { params }: Params) {
   const user = await getCurrentUser();
   if (!user) return unauthorized();
 
@@ -27,10 +35,14 @@ export async function GET(_request: Request, { params }: Params) {
     return forbidden("別店舗の成績は閲覧できません。");
   }
 
+  const mode = resolveMode(request.nextUrl.searchParams.get("mode"));
   const records = await prisma.gamePlayer.findMany({
     where: {
       playerId,
-      game: { status: "FINISHED" },
+      game: {
+        status: "FINISHED",
+        ...(mode === "tournament" ? { category: GameCategory.TOURNAMENT } : {}),
+      },
       rank: { not: null },
       score: { not: null },
     },
@@ -44,14 +56,16 @@ export async function GET(_request: Request, { params }: Params) {
     },
   });
 
-  const count = records.length;
-  const totalRank = records.reduce((sum, record) => sum + (record.rank ?? 0), 0);
-  const totalScore = records.reduce((sum, record) => sum + (record.score ?? 0), 0);
-  const topCount = records.filter((record) => record.rank === 1).length;
-  const lastCount = records.filter((record) => record.rank === 4).length;
+  const targetRecords = mode === "recent" ? records.slice(0, 10) : records;
+  const count = targetRecords.length;
+  const totalRank = targetRecords.reduce((sum, record) => sum + (record.rank ?? 0), 0);
+  const totalScore = targetRecords.reduce((sum, record) => sum + (record.score ?? 0), 0);
+  const topCount = targetRecords.filter((record) => record.rank === 1).length;
+  const lastCount = targetRecords.filter((record) => record.rank === 4).length;
 
   return NextResponse.json({
     player,
+    mode,
     stats: {
       gameCount: count,
       averageRank: count ? Math.round((totalRank / count) * 100) / 100 : 0,
@@ -59,9 +73,10 @@ export async function GET(_request: Request, { params }: Params) {
       lastRate: count ? Math.round((lastCount / count) * 1000) / 10 : 0,
       averageScore: count ? Math.round((totalScore / count) * 10) / 10 : 0,
       totalScore: Math.round(totalScore * 10) / 10,
-      recentGames: records.slice(0, 10).map((record) => ({
+      recentGames: targetRecords.slice(0, 10).map((record) => ({
         gameId: record.gameId,
         tableNumber: record.game.table.tableNumber,
+        category: record.game.category,
         finishedAt: record.game.finishedAt,
         finalPoints: record.finalPoints,
         rank: record.rank,

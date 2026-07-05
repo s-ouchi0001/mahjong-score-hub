@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ResultSource } from "@prisma/client";
+import { GameCategory, ResultSource } from "@prisma/client";
 import { badRequest, forbidden, notFound, unauthorized } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import { FinishGameError, finishGameWithResults } from "@/lib/gameFinish";
@@ -16,6 +16,7 @@ export async function POST(request: NextRequest, { params }: Params) {
   const { gameId } = await params;
   const body = await request.json().catch(() => null);
   const results = body?.results as { playerId: string; points: number }[] | undefined;
+  const category = body?.category === GameCategory.TOURNAMENT ? GameCategory.TOURNAMENT : GameCategory.REGULAR;
 
   try {
     const game = await finishGameWithResults({
@@ -24,6 +25,7 @@ export async function POST(request: NextRequest, { params }: Params) {
       source: ResultSource.MANUAL,
       payload: body,
       storeId: user.storeId,
+      category,
     });
 
     return NextResponse.json({ game });
