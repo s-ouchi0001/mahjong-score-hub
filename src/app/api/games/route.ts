@@ -23,6 +23,7 @@ export async function GET() {
     games: games.map((game) => ({
       id: game.id,
       status: game.status,
+      category: game.category,
       startedAt: game.startedAt,
       finishedAt: game.finishedAt,
       table: {

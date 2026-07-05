@@ -5,6 +5,7 @@
     <application
         android:allowBackup="true"
         android:label="麻雀卓点数送信"
+        android:testOnly="false"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
         <activity

@@ -14,13 +14,22 @@ type ActiveGame = {
   }[];
 };
 
+type GameCategory = "REGULAR" | "TOURNAMENT";
+
+function totalPoints(points: number[]) {
+  return points.reduce((sum, point) => sum + (Number.isFinite(point) ? point : 0), 0);
+}
+
 export function ScoreEntry({ games }: { games: ActiveGame[] }) {
   const [gameState, setGameState] = useState(games);
   const [gameId, setGameId] = useState(games[0]?.id ?? "");
   const selectedGame = gameState.find((game) => game.id === gameId) ?? gameState[0];
   const [points, setPoints] = useState<number[]>(selectedGame?.players.map((player) => player.currentPoints) ?? [25000, 25000, 25000, 25000]);
+  const [category, setCategory] = useState<GameCategory>("REGULAR");
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const pointTotal = totalPoints(points);
+  const isTotalOk = pointTotal === 100000;
 
   function selectGame(nextGameId: string) {
     const nextGame = gameState.find((game) => game.id === nextGameId);
@@ -32,6 +41,11 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
   function updatePoints(index: number, value: string) {
     const parsed = Number(value);
     setPoints((current) => current.map((point, currentIndex) => (currentIndex === index ? parsed : point)));
+  }
+
+  function resetPoints() {
+    setPoints([25000, 25000, 25000, 25000]);
+    setMessage({ type: "ok", text: "全員25,000点に戻しました。" });
   }
 
   const calculated = useMemo(() => {
@@ -50,6 +64,10 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
 
   async function finishGame() {
     if (!selectedGame) return;
+    if (!isTotalOk) {
+      setMessage({ type: "error", text: "4人の合計が100,000点になるように確認してください。" });
+      return;
+    }
     setIsSaving(true);
     setMessage(null);
     try {
@@ -57,6 +75,7 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          category,
           results: selectedGame.players.map((player, index) => ({
             playerId: player.id,
             points: points[index],
@@ -71,7 +90,8 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
         setPoints(nextGames[0]?.players.map((player) => player.currentPoints) ?? [25000, 25000, 25000, 25000]);
         return nextGames;
       });
-      setMessage({ type: "ok", text: `${selectedGame.tableNumber}卓の結果を確定しました。` });
+      setCategory("REGULAR");
+      setMessage({ type: "ok", text: `${selectedGame.tableNumber}卓の${category === "TOURNAMENT" ? "大会" : "通常"}成績を確定しました。` });
     } catch (error) {
       setMessage({ type: "error", text: error instanceof Error ? error.message : "結果確定に失敗しました。" });
     } finally {
@@ -90,7 +110,10 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
   return (
     <div className="grid two">
       <section className="panel">
-        <h2>成績入力</h2>
+        <div className="score-entry-heading">
+          <h2>成績入力</h2>
+          <span className={`badge ${isTotalOk ? "ok" : "warn"}`}>合計 {pointTotal.toLocaleString()}</span>
+        </div>
         <div className="form">
           <div className="field">
             <label htmlFor="game">卓</label>
@@ -101,6 +124,26 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="field">
+            <label>成績区分</label>
+            <div className="segment-control" role="group" aria-label="成績区分">
+              <button
+                className={category === "REGULAR" ? "active" : ""}
+                type="button"
+                onClick={() => setCategory("REGULAR")}
+              >
+                通常成績
+              </button>
+              <button
+                className={category === "TOURNAMENT" ? "active" : ""}
+                type="button"
+                onClick={() => setCategory("TOURNAMENT")}
+              >
+                大会成績
+              </button>
+            </div>
           </div>
 
           <div className="player-grid">
@@ -119,6 +162,9 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
           </div>
 
           <div className="actions">
+            <button className="button secondary" type="button" onClick={resetPoints}>
+              25,000に戻す
+            </button>
             <button className="button" type="button" onClick={finishGame} disabled={isSaving}>
               結果を確定
             </button>

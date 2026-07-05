@@ -23,7 +23,7 @@ export default async function PlayersPage() {
       <section className="page-title">
         <div>
           <h1>プレイヤー成績</h1>
-          <p>半荘数、平均順位、トップ率、ラス率、スコア、直近10半荘を確認します。</p>
+          <p>通算成績、直近10半荘、大会成績を切り替えて確認します。</p>
         </div>
       </section>
       <PlayerStats

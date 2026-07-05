@@ -4,7 +4,7 @@
             "outputFile": "com.example.mahjongscoregateway.app-mergeDebugResources-30:/values-v22/values-v22.xml",
             "map": [
                 {
-                    "source": "/Users/user/.gradle/caches/9.3.0/transforms/d0d6351b069b5bdd35a6f67a38069ec7/transformed/appcompat-1.6.1/res/values-v22/values-v22.xml",
+                    "source": "/Users/user/.gradle/caches/9.3.0/transforms/16a89a09422c3f3d35a90831167ec212/transformed/appcompat-1.7.0/res/values-v22/values-v22.xml",
                     "from": {
                         "startLines": "2,3,4,9",
                         "startColumns": "4,4,4,4",

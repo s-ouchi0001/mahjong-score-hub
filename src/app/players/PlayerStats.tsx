@@ -8,8 +8,11 @@ type PlayerOption = {
   name: string;
 };
 
+type StatsMode = "total" | "recent" | "tournament";
+
 type StatsPayload = {
   player: PlayerOption;
+  mode: StatsMode;
   stats: {
     gameCount: number;
     averageRank: number;
@@ -20,6 +23,7 @@ type StatsPayload = {
     recentGames: {
       gameId: string;
       tableNumber: number;
+      category: "REGULAR" | "TOURNAMENT";
       finishedAt: string | null;
       finalPoints: number | null;
       rank: number | null;
@@ -38,17 +42,18 @@ export function PlayerStats({
   const searchParams = useSearchParams();
   const initialPlayerId = searchParams.get("playerId");
   const [playerId, setPlayerId] = useState(lockedPlayerId ?? initialPlayerId ?? players[0]?.id ?? "");
+  const [mode, setMode] = useState<StatsMode>("total");
   const [payload, setPayload] = useState<StatsPayload | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!playerId) return;
     setLoading(true);
-    fetch(`/api/players/${playerId}/stats`)
+    fetch(`/api/players/${playerId}/stats?mode=${mode}`)
       .then((response) => response.json())
       .then(setPayload)
       .finally(() => setLoading(false));
-  }, [playerId]);
+  }, [playerId, mode]);
 
   return (
     <div className="grid">
@@ -68,7 +73,20 @@ export function PlayerStats({
       )}
 
       <section className="panel">
-        <h2>{payload?.player.name ?? "成績"} {loading ? "集計中" : ""}</h2>
+        <div className="score-entry-heading">
+          <h2>{payload?.player.name ?? "成績"} {loading ? "集計中" : ""}</h2>
+          <div className="segment-control compact-segment" role="group" aria-label="成績表示">
+            <button className={mode === "total" ? "active" : ""} type="button" onClick={() => setMode("total")}>
+              通算
+            </button>
+            <button className={mode === "recent" ? "active" : ""} type="button" onClick={() => setMode("recent")}>
+              直近
+            </button>
+            <button className={mode === "tournament" ? "active" : ""} type="button" onClick={() => setMode("tournament")}>
+              大会
+            </button>
+          </div>
+        </div>
         <div className="metric-grid">
           <div className="metric">
             <span>半荘数</span>
@@ -94,12 +112,13 @@ export function PlayerStats({
       </section>
 
       <section className="panel">
-        <h2>累計スコア {payload?.stats.totalScore.toFixed(1) ?? "0.0"}</h2>
+        <h2>{mode === "recent" ? "直近10半荘" : mode === "tournament" ? "大会成績" : "累計スコア"} {payload?.stats.totalScore.toFixed(1) ?? "0.0"}</h2>
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
                 <th>日時</th>
+                <th>区分</th>
                 <th>卓</th>
                 <th>順位</th>
                 <th>最終点数</th>
@@ -111,6 +130,11 @@ export function PlayerStats({
                 payload.stats.recentGames.map((game) => (
                   <tr key={game.gameId}>
                     <td>{game.finishedAt ? new Date(game.finishedAt).toLocaleString("ja-JP") : "-"}</td>
+                    <td>
+                      <span className={`badge ${game.category === "TOURNAMENT" ? "warn" : "idle"}`}>
+                        {game.category === "TOURNAMENT" ? "大会" : "通常"}
+                      </span>
+                    </td>
                     <td>{game.tableNumber}卓</td>
                     <td>{game.rank}位</td>
                     <td>{game.finalPoints?.toLocaleString() ?? "-"}</td>
@@ -119,7 +143,7 @@ export function PlayerStats({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="muted">
+                  <td colSpan={6} className="muted">
                     確定済みの半荘はまだありません。
                   </td>
                 </tr>

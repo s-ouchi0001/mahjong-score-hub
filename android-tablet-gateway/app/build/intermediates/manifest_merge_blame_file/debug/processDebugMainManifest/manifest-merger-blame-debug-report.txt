@@ -31,7 +31,7 @@
 20-->[com.google.android.datatransport:transport-backend-cct:2.3.3] /Users/user/.gradle/caches/9.3.0/transforms/948d4316b9a586fb52a060947d231d6d/transformed/transport-backend-cct-2.3.3/AndroidManifest.xml:25:22-76
 21
 22    <application
-22-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:5:5-19:19
+22-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:5:5-20:19
 23        android:allowBackup="true"
 23-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:6:9-35
 24        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
@@ -40,28 +40,29 @@
 26        android:extractNativeLibs="false"
 27        android:label="麻雀卓点数送信"
 27-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:7:9-32
-28        android:testOnly="true"
+28        android:testOnly="false"
+28-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:8:9-33
 29        android:theme="@style/AppTheme"
-29-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:8:9-40
+29-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:9:9-40
 30        android:usesCleartextTraffic="true" >
-30-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:9:9-44
+30-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:10:9-44
 31        <activity
-31-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:10:9-18:20
+31-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:11:9-19:20
 32            android:name="com.example.mahjongscoregateway.MainActivity"
-32-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:11:13-41
+32-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:12:13-41
 33            android:exported="true"
-33-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:12:13-36
+33-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:13:13-36
 34            android:windowSoftInputMode="adjustResize" >
-34-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:13:13-55
+34-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:14:13-55
 35            <intent-filter>
-35-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:14:13-17:29
+35-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:15:13-18:29
 36                <action android:name="android.intent.action.MAIN" />
-36-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:15:17-69
-36-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:15:25-66
+36-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:16:17-69
+36-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:16:25-66
 37
 38                <category android:name="android.intent.category.LAUNCHER" />
-38-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:16:17-77
-38-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:16:27-74
+38-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:17:17-77
+38-->/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/src/main/AndroidManifest.xml:17:27-74
 39            </intent-filter>
 40        </activity>
 41        <!--
@@ -139,19 +140,19 @@
 81-->[com.google.android.gms:play-services-basement:18.4.0] /Users/user/.gradle/caches/9.3.0/transforms/ef58beac8dd47a801371aab04865ace7/transformed/play-services-basement-18.4.0/AndroidManifest.xml:6:66-119
 82
 83        <provider
-83-->[androidx.emoji2:emoji2:1.2.0] /Users/user/.gradle/caches/9.3.0/transforms/b8c35671e1267aacc353caba0ebc8085/transformed/emoji2-1.2.0/AndroidManifest.xml:24:9-32:20
+83-->[androidx.emoji2:emoji2:1.3.0] /Users/user/.gradle/caches/9.3.0/transforms/a8bc966f5d1cd104e70fe4fef563e67e/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
 84            android:name="androidx.startup.InitializationProvider"
-84-->[androidx.emoji2:emoji2:1.2.0] /Users/user/.gradle/caches/9.3.0/transforms/b8c35671e1267aacc353caba0ebc8085/transformed/emoji2-1.2.0/AndroidManifest.xml:25:13-67
+84-->[androidx.emoji2:emoji2:1.3.0] /Users/user/.gradle/caches/9.3.0/transforms/a8bc966f5d1cd104e70fe4fef563e67e/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
 85            android:authorities="com.example.mahjongscoregateway.androidx-startup"
-85-->[androidx.emoji2:emoji2:1.2.0] /Users/user/.gradle/caches/9.3.0/transforms/b8c35671e1267aacc353caba0ebc8085/transformed/emoji2-1.2.0/AndroidManifest.xml:26:13-68
+85-->[androidx.emoji2:emoji2:1.3.0] /Users/user/.gradle/caches/9.3.0/transforms/a8bc966f5d1cd104e70fe4fef563e67e/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
 86            android:exported="false" >
-86-->[androidx.emoji2:emoji2:1.2.0] /Users/user/.gradle/caches/9.3.0/transforms/b8c35671e1267aacc353caba0ebc8085/transformed/emoji2-1.2.0/AndroidManifest.xml:27:13-37
+86-->[androidx.emoji2:emoji2:1.3.0] /Users/user/.gradle/caches/9.3.0/transforms/a8bc966f5d1cd104e70fe4fef563e67e/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
 87            <meta-data
-87-->[androidx.emoji2:emoji2:1.2.0] /Users/user/.gradle/caches/9.3.0/transforms/b8c35671e1267aacc353caba0ebc8085/transformed/emoji2-1.2.0/AndroidManifest.xml:29:13-31:52
+87-->[androidx.emoji2:emoji2:1.3.0] /Users/user/.gradle/caches/9.3.0/transforms/a8bc966f5d1cd104e70fe4fef563e67e/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
 88                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-88-->[androidx.emoji2:emoji2:1.2.0] /Users/user/.gradle/caches/9.3.0/transforms/b8c35671e1267aacc353caba0ebc8085/transformed/emoji2-1.2.0/AndroidManifest.xml:30:17-75
+88-->[androidx.emoji2:emoji2:1.3.0] /Users/user/.gradle/caches/9.3.0/transforms/a8bc966f5d1cd104e70fe4fef563e67e/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
 89                android:value="androidx.startup" />
-89-->[androidx.emoji2:emoji2:1.2.0] /Users/user/.gradle/caches/9.3.0/transforms/b8c35671e1267aacc353caba0ebc8085/transformed/emoji2-1.2.0/AndroidManifest.xml:31:17-49
+89-->[androidx.emoji2:emoji2:1.3.0] /Users/user/.gradle/caches/9.3.0/transforms/a8bc966f5d1cd104e70fe4fef563e67e/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
 90            <meta-data
 90-->[androidx.lifecycle:lifecycle-process:2.6.2] /Users/user/.gradle/caches/9.3.0/transforms/8890ae18d41c0446c820b94b6e5d648d/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:29:13-31:52
 91                android:name="androidx.lifecycle.ProcessLifecycleInitializer"

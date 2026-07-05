@@ -5,12 +5,17 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Paint;
 import android.graphics.DashPathEffect;
 import android.graphics.Rect;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbInterface;
+import android.hardware.usb.UsbManager;
 import android.media.Image;
 import android.os.Bundle;
 import android.os.Handler;
@@ -43,6 +48,14 @@ import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
+import com.jiangdg.ausbc.MultiCameraClient;
+import com.jiangdg.ausbc.callback.ICameraStateCallBack;
+import com.jiangdg.ausbc.callback.IDeviceConnectCallBack;
+import com.jiangdg.ausbc.callback.IPreviewDataCallBack;
+import com.jiangdg.ausbc.camera.bean.CameraRequest;
+import com.jiangdg.ausbc.camera.bean.PreviewSize;
+import com.jiangdg.ausbc.widget.AspectRatioTextureView;
+import com.serenegiant.usb.USBMonitor;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -55,6 +68,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -78,6 +92,7 @@ public class MainActivity extends ComponentActivity {
     private EditText baseUrlInput;
     private EditText deviceIdInput;
     private EditText apiKeyInput;
+    private EditText imageUrlInput;
     private TextView statusText;
     private TextView tableText;
     private TextView lastFetchText;
@@ -85,20 +100,31 @@ public class MainActivity extends ComponentActivity {
     private TextView pointSummaryText;
     private TextView cameraStatusText;
     private TextView cameraListText;
+    private TextView usbCameraListText;
     private TextView ocrResultText;
     private PreviewView previewView;
+    private AspectRatioTextureView usbPreviewView;
     private RegionOverlayView regionOverlayView;
     private Button fetchButton;
     private Button sendButton;
     private Button cameraButton;
     private Button cameraSwitchButton;
+    private Button usbCameraRefreshButton;
+    private Button usbCameraButton;
+    private Button imageUrlButton;
 
     private ProcessCameraProvider cameraProvider;
+    private MultiCameraClient usbCameraClient;
+    private MultiCameraClient.Camera usbCamera;
     private final List<CameraOption> cameraOptions = new ArrayList<>();
+    private final List<UsbDevice> usbCameraDevices = new ArrayList<>();
     private String storeId = "";
     private int tableNumber = 0;
     private int selectedCameraIndex = 0;
+    private int selectedUsbCameraIndex = 0;
     private boolean cameraRunning = false;
+    private boolean usbCameraRunning = false;
+    private boolean imageUrlRunning = false;
     private boolean ocrBusy = false;
     private long lastOcrAt = 0;
 
@@ -113,6 +139,13 @@ public class MainActivity extends ComponentActivity {
     protected void onDestroy() {
         if (cameraProvider != null) {
             cameraProvider.unbindAll();
+        }
+        imageUrlRunning = false;
+        stopUsbCamera();
+        if (usbCameraClient != null) {
+            usbCameraClient.unRegister();
+            usbCameraClient.destroy();
+            usbCameraClient = null;
         }
         textRecognizer.close();
         cameraExecutor.shutdownNow();
@@ -175,6 +208,13 @@ public class MainActivity extends ComponentActivity {
             FrameLayout.LayoutParams.MATCH_PARENT
         ));
 
+        usbPreviewView = new AspectRatioTextureView(this);
+        usbPreviewView.setVisibility(View.GONE);
+        previewFrame.addView(usbPreviewView, new FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        ));
+
         regionOverlayView = new RegionOverlayView(this);
         previewFrame.addView(regionOverlayView, new FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
@@ -183,6 +223,14 @@ public class MainActivity extends ComponentActivity {
 
         cameraButton = addButton(root, "カメラ読み取り開始");
         cameraButton.setOnClickListener(view -> toggleCamera());
+        usbCameraListText = addText(root, "USB Webカメラ: 確認中", 14, Color.rgb(27, 34, 31));
+        usbCameraRefreshButton = addButton(root, "USB Webカメラを再検出");
+        usbCameraRefreshButton.setOnClickListener(view -> refreshUsbCameraDevices());
+        usbCameraButton = addButton(root, "USB Webカメラ読み取り開始");
+        usbCameraButton.setOnClickListener(view -> toggleUsbCamera());
+        imageUrlInput = addInput(root, "USB Camera画像URL 任意", "", InputType.TYPE_CLASS_TEXT);
+        imageUrlButton = addButton(root, "画像URLから読み取り開始");
+        imageUrlButton.setOnClickListener(view -> toggleImageUrlReading());
         cameraStatusText = addText(root, "カメラ: 停止中", 14, Color.rgb(101, 112, 107));
         ocrResultText = addText(root, "認識結果: -", 14, Color.rgb(27, 34, 31));
 
@@ -442,6 +490,303 @@ public class MainActivity extends ComponentActivity {
         mainHandler.post(() -> cameraListText.setText(message));
     }
 
+    private void setupUsbCameraClient() {
+        if (usbCameraClient != null) return;
+
+        try {
+            usbCameraClient = new MultiCameraClient(this, new IDeviceConnectCallBack() {
+                @Override
+                public void onAttachDev(UsbDevice device) {
+                    refreshUsbCameraDevices();
+                    setCameraStatus("USB Webカメラを検出しました。USB Webカメラ読み取り開始を押してください。");
+                }
+
+                @Override
+                public void onDetachDec(UsbDevice device) {
+                    if (usbCamera != null && device != null && usbCamera.getUsbDevice().getDeviceId() == device.getDeviceId()) {
+                        stopUsbCamera();
+                    }
+                    refreshUsbCameraDevices();
+                    setCameraStatus("USB Webカメラが外されました。");
+                }
+
+                @Override
+                public void onConnectDev(UsbDevice device, USBMonitor.UsbControlBlock ctrlBlock) {
+                    if (device == null || ctrlBlock == null) {
+                        setCameraStatus("USB Webカメラの接続許可を取得できませんでした。");
+                        return;
+                    }
+                    openUsbCamera(device, ctrlBlock);
+                }
+
+                @Override
+                public void onDisConnectDec(UsbDevice device, USBMonitor.UsbControlBlock ctrlBlock) {
+                    stopUsbCamera();
+                }
+
+                @Override
+                public void onCancelDev(UsbDevice device) {
+                    setCameraStatus("USB Webカメラの使用が許可されませんでした。");
+                }
+            });
+            usbCameraClient.register();
+        } catch (Throwable error) {
+            usbCameraClient = null;
+            setUsbCameraListText("USB Webカメラ: 初期化できません。USB Cameraアプリの画像URL連携を使ってください。");
+            setCameraStatus("USB Webカメラ初期化エラー: " + readableError(error));
+        }
+    }
+
+    private void refreshUsbCameraDevices() {
+        usbCameraDevices.clear();
+        setupUsbCameraClient();
+        if (usbCameraClient == null) {
+            addUsbManagerCameraDevices();
+            updateUsbCameraListText();
+            return;
+        }
+
+        try {
+            List<UsbDevice> devices = usbCameraClient.getDeviceList(null);
+            if (devices != null) {
+                usbCameraDevices.addAll(devices);
+            }
+        } catch (Throwable error) {
+            setCameraStatus("USB Webカメラ一覧取得エラー: " + readableError(error));
+        }
+        addUsbManagerCameraDevices();
+        if (selectedUsbCameraIndex >= usbCameraDevices.size()) {
+            selectedUsbCameraIndex = 0;
+        }
+        updateUsbCameraListText();
+    }
+
+    private void addUsbManagerCameraDevices() {
+        UsbManager usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+        if (usbManager == null) return;
+
+        Map<String, UsbDevice> deviceList = usbManager.getDeviceList();
+        List<UsbDevice> fallbackDevices = new ArrayList<>();
+        for (UsbDevice device : deviceList.values()) {
+            if (containsUsbDevice(device)) continue;
+            if (isLikelyUsbCamera(device)) {
+                usbCameraDevices.add(device);
+            } else {
+                fallbackDevices.add(device);
+            }
+        }
+        if (usbCameraDevices.isEmpty()) {
+            usbCameraDevices.addAll(fallbackDevices);
+        }
+    }
+
+    private boolean containsUsbDevice(UsbDevice candidate) {
+        for (UsbDevice device : usbCameraDevices) {
+            if (device.getDeviceId() == candidate.getDeviceId()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isLikelyUsbCamera(UsbDevice device) {
+        if (device.getDeviceClass() == 14) {
+            return true;
+        }
+        for (int i = 0; i < device.getInterfaceCount(); i += 1) {
+            UsbInterface usbInterface = device.getInterface(i);
+            if (usbInterface.getInterfaceClass() == 14) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void updateUsbCameraListText() {
+        if (usbCameraDevices.isEmpty()) {
+            setUsbCameraListText("USB Webカメラ: 見つかりません。接続後に再検出してください。");
+            return;
+        }
+
+        StringBuilder builder = new StringBuilder("USB Webカメラ:\n");
+        for (int i = 0; i < usbCameraDevices.size(); i += 1) {
+            UsbDevice device = usbCameraDevices.get(i);
+            builder.append(i == selectedUsbCameraIndex ? "使用予定: " : "候補: ");
+            builder.append(device.getProductName() != null ? device.getProductName() : device.getDeviceName());
+            builder.append(" VID:").append(device.getVendorId());
+            builder.append(" PID:").append(device.getProductId());
+            if (i < usbCameraDevices.size() - 1) {
+                builder.append("\n");
+            }
+        }
+        setUsbCameraListText(builder.toString());
+    }
+
+    private void setUsbCameraListText(String message) {
+        if (usbCameraListText == null) return;
+        mainHandler.post(() -> usbCameraListText.setText(message));
+    }
+
+    private void toggleUsbCamera() {
+        if (usbCameraRunning) {
+            stopUsbCamera();
+            return;
+        }
+
+        if (cameraRunning) {
+            stopCamera();
+        }
+        if (imageUrlRunning) {
+            stopImageUrlReading();
+        }
+
+        refreshUsbCameraDevices();
+        if (usbCameraDevices.isEmpty()) {
+            setCameraStatus("USB Webカメラが見つかりません。接続後に再検出してください。");
+            return;
+        }
+
+        UsbDevice device = usbCameraDevices.get(selectedUsbCameraIndex);
+        setCameraStatus("USB Webカメラの使用許可を待っています。画面に確認が出たら許可してください。");
+        try {
+            usbCameraClient.requestPermission(device);
+        } catch (Throwable error) {
+            setCameraStatus("USB Webカメラ開始エラー: " + readableError(error));
+        }
+    }
+
+    private void openUsbCamera(UsbDevice device, USBMonitor.UsbControlBlock ctrlBlock) {
+        try {
+            stopUsbCamera();
+            previewView.setVisibility(View.GONE);
+            usbPreviewView.setVisibility(View.VISIBLE);
+
+            usbCamera = new MultiCameraClient.Camera(this, device);
+            usbCamera.setUsbControlBlock(ctrlBlock);
+            usbCamera.setCameraStateCallBack(new ICameraStateCallBack() {
+                @Override
+                public void onCameraState(MultiCameraClient.Camera self, ICameraStateCallBack.State code, String message) {
+                    if (code == ICameraStateCallBack.State.OPENED) {
+                        usbCameraRunning = true;
+                        mainHandler.post(() -> {
+                            usbCameraButton.setText("USB Webカメラ読み取り停止");
+                            setCameraStatus("USB Webカメラで読み取り中です。");
+                        });
+                        return;
+                    }
+                    if (code == ICameraStateCallBack.State.CLOSED) {
+                        usbCameraRunning = false;
+                        mainHandler.post(() -> usbCameraButton.setText("USB Webカメラ読み取り開始"));
+                        return;
+                    }
+                    setCameraStatus("USB Webカメラ起動失敗: " + (message == null ? "不明なエラー" : message));
+                }
+            });
+            usbCamera.addPreviewDataCallBack(this::analyzeUsbCameraFrame);
+            usbCamera.openCamera(usbPreviewView, usbCameraRequest());
+        } catch (Throwable error) {
+            stopUsbCamera();
+            setCameraStatus("USB Webカメラ起動エラー: " + readableError(error));
+        }
+    }
+
+    private CameraRequest usbCameraRequest() {
+        return new CameraRequest.Builder()
+            .setPreviewWidth(1280)
+            .setPreviewHeight(720)
+            .create();
+    }
+
+    private void stopUsbCamera() {
+        if (usbCamera != null) {
+            try {
+                usbCamera.closeCamera();
+            } catch (Throwable ignored) {
+                // Keep the app open even if the USB camera library fails during shutdown.
+            }
+            usbCamera = null;
+        }
+        usbCameraRunning = false;
+        if (usbCameraButton != null) {
+            mainHandler.post(() -> usbCameraButton.setText("USB Webカメラ読み取り開始"));
+        }
+        if (usbPreviewView != null && previewView != null) {
+            mainHandler.post(() -> {
+                usbPreviewView.setVisibility(View.GONE);
+                previewView.setVisibility(View.VISIBLE);
+            });
+        }
+    }
+
+    private String readableError(Throwable error) {
+        if (error == null) return "不明なエラー";
+        String message = error.getMessage();
+        if (message == null || message.trim().isEmpty()) {
+            return error.getClass().getSimpleName();
+        }
+        return message;
+    }
+
+    private void toggleImageUrlReading() {
+        if (imageUrlRunning) {
+            stopImageUrlReading();
+            return;
+        }
+
+        String imageUrl = imageUrlInput.getText().toString().trim();
+        if (imageUrl.isEmpty()) {
+            setCameraStatus("USB Cameraアプリの画像URLを入力してください。");
+            return;
+        }
+        if (!imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+            setCameraStatus("画像URLは http:// または https:// で入力してください。");
+            return;
+        }
+
+        if (cameraRunning) {
+            stopCamera();
+        }
+
+        imageUrlRunning = true;
+        imageUrlButton.setText("画像URLから読み取り停止");
+        setCameraStatus("画像URLから読み取り中です。");
+        fetchImageUrlFrame();
+    }
+
+    private void stopImageUrlReading() {
+        imageUrlRunning = false;
+        ocrBusy = false;
+        imageUrlButton.setText("画像URLから読み取り開始");
+        setCameraStatus("画像URL読み取りを停止しました。");
+    }
+
+    private void fetchImageUrlFrame() {
+        if (!imageUrlRunning) return;
+
+        executor.execute(() -> {
+            try {
+                String imageUrl = imageUrlInput.getText().toString().trim();
+                URL url = new URL(imageUrl);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setConnectTimeout(3000);
+                connection.setReadTimeout(3000);
+                connection.setUseCaches(false);
+                Bitmap bitmap = BitmapFactory.decodeStream(connection.getInputStream());
+                connection.disconnect();
+
+                if (bitmap == null) {
+                    setCameraStatus("画像URLから画像を取得できませんでした。");
+                } else {
+                    analyzeBitmapFrame(bitmap);
+                }
+            } catch (Exception error) {
+                setCameraStatus("画像URL読み取り失敗: " + error.getMessage());
+            } finally {
+                mainHandler.postDelayed(this::fetchImageUrlFrame, OCR_INTERVAL_MS);
+            }
+        });
+    }
+
     private void toggleCamera() {
         if (cameraRunning) {
             stopCamera();
@@ -483,6 +828,14 @@ public class MainActivity extends ComponentActivity {
     }
 
     private void startCamera() {
+        if (imageUrlRunning) {
+            stopImageUrlReading();
+        }
+        if (usbCameraRunning) {
+            stopUsbCamera();
+        }
+        previewView.setVisibility(View.VISIBLE);
+        usbPreviewView.setVisibility(View.GONE);
         setCameraStatus("カメラを起動中...");
         ListenableFuture<ProcessCameraProvider> providerFuture = ProcessCameraProvider.getInstance(this);
         providerFuture.addListener(() -> {
@@ -560,6 +913,50 @@ public class MainActivity extends ComponentActivity {
                 ocrBusy = false;
                 imageProxy.close();
             });
+    }
+
+    private void analyzeBitmapFrame(Bitmap bitmap) {
+        long now = System.currentTimeMillis();
+        if (ocrBusy || now - lastOcrAt < OCR_INTERVAL_MS) {
+            return;
+        }
+
+        ocrBusy = true;
+        lastOcrAt = now;
+        int imageWidth = bitmap.getWidth();
+        int imageHeight = bitmap.getHeight();
+        InputImage image = InputImage.fromBitmap(bitmap, 0);
+
+        textRecognizer.process(image)
+            .addOnSuccessListener(text -> applyRecognizedText(text, imageWidth, imageHeight))
+            .addOnFailureListener(error -> setCameraStatus("画像URL OCR失敗: " + error.getMessage()))
+            .addOnCompleteListener(task -> ocrBusy = false);
+    }
+
+    private void analyzeUsbCameraFrame(byte[] data, IPreviewDataCallBack.DataFormat format) {
+        long now = System.currentTimeMillis();
+        if (data == null || format != IPreviewDataCallBack.DataFormat.NV21 || ocrBusy || now - lastOcrAt < OCR_INTERVAL_MS) {
+            return;
+        }
+        if (usbCamera == null) {
+            return;
+        }
+
+        PreviewSize previewSize = usbCamera.getPreviewSize();
+        int imageWidth = previewSize == null ? 1280 : previewSize.getWidth();
+        int imageHeight = previewSize == null ? 720 : previewSize.getHeight();
+        if (imageWidth <= 0 || imageHeight <= 0) {
+            return;
+        }
+
+        ocrBusy = true;
+        lastOcrAt = now;
+        InputImage image = InputImage.fromByteArray(data, imageWidth, imageHeight, 0, InputImage.IMAGE_FORMAT_NV21);
+
+        textRecognizer.process(image)
+            .addOnSuccessListener(text -> applyRecognizedText(text, imageWidth, imageHeight))
+            .addOnFailureListener(error -> setCameraStatus("USB WebカメラOCR失敗: " + error.getMessage()))
+            .addOnCompleteListener(task -> ocrBusy = false);
     }
 
     private void applyRecognizedText(Text text, int imageWidth, int imageHeight) {

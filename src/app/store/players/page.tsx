@@ -1,4 +1,5 @@
 import { AppShell } from "@/app/components/AppShell";
+import { GameCategory } from "@prisma/client";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireStoreAdmin } from "@/lib/session";
@@ -17,13 +18,32 @@ type PlayerSummary = {
   totalScore: number;
 };
 
+type StatsMode = "total" | "recent" | "tournament";
+
 function round(value: number, digits = 1) {
   const scale = 10 ** digits;
   return Math.round(value * scale) / scale;
 }
 
-export default async function StorePlayersPage() {
+function resolveMode(value: string | string[] | undefined): StatsMode {
+  const mode = Array.isArray(value) ? value[0] : value;
+  if (mode === "recent" || mode === "tournament") return mode;
+  return "total";
+}
+
+function modeLabel(mode: StatsMode) {
+  if (mode === "recent") return "直近成績";
+  if (mode === "tournament") return "大会成績";
+  return "通算成績";
+}
+
+export default async function StorePlayersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mode?: string | string[] }>;
+}) {
   const user = await requireStoreAdmin();
+  const mode = resolveMode((await searchParams).mode);
 
   const players = await prisma.player.findMany({
     where: {
@@ -37,20 +57,31 @@ export default async function StorePlayersPage() {
       managementNumber: true,
       gamePlayers: {
         where: {
-          game: { status: "FINISHED" },
+          game: {
+            status: "FINISHED",
+            ...(mode === "tournament" ? { category: GameCategory.TOURNAMENT } : {}),
+          },
           rank: { not: null },
           score: { not: null },
+        },
+        orderBy: {
+          game: { finishedAt: "desc" },
         },
         select: {
           rank: true,
           score: true,
+          game: {
+            select: {
+              finishedAt: true,
+            },
+          },
         },
       },
     },
   });
 
   const summaries: PlayerSummary[] = players.map((player) => {
-    const records = player.gamePlayers;
+    const records = mode === "recent" ? player.gamePlayers.slice(0, 10) : player.gamePlayers;
     const gameCount = records.length;
     const totalRank = records.reduce((sum, record) => sum + (record.rank ?? 0), 0);
     const totalScore = records.reduce((sum, record) => sum + (record.score ?? 0), 0);
@@ -75,10 +106,23 @@ export default async function StorePlayersPage() {
       <section className="page-title">
         <div>
           <h1>ユーザ成績一覧</h1>
-          <p>登録プレイヤー全員の成績を照会します。</p>
+          <p>登録プレイヤー全員の{modeLabel(mode)}を照会します。</p>
         </div>
       </section>
       <section className="panel">
+        <div className="list-header">
+          <div className="segment-control compact-segment" role="group" aria-label="成績表示">
+            <Link className={mode === "total" ? "active" : ""} href="/store/players">
+              通算
+            </Link>
+            <Link className={mode === "recent" ? "active" : ""} href="/store/players?mode=recent">
+              直近
+            </Link>
+            <Link className={mode === "tournament" ? "active" : ""} href="/store/players?mode=tournament">
+              大会
+            </Link>
+          </div>
+        </div>
         <div className="table-wrap">
           <table>
             <thead>

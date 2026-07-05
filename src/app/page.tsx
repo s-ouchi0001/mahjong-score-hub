@@ -54,7 +54,7 @@ export default async function DashboardPage() {
       <section className="page-title">
         <div>
           <h1>本部ダッシュボード</h1>
-          <p>各卓の状態、参加者、現在点数、通信状態を一覧で確認します。</p>
+          <p>本日の卓状況、参加者、点数、通信状態を一覧で確認します。</p>
         </div>
         <AutoRefresh />
       </section>
