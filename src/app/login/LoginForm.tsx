@@ -15,6 +15,17 @@ type LoginFormProps = {
   identifierLabel: string;
 };
 
+async function readLoginResponse(response: Response) {
+  const text = await response.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text) as { error?: string; user?: { playerId?: string | null } };
+  } catch {
+    return null;
+  }
+}
+
 export function LoginForm({ role, title, description, defaultIdentifier = "", defaultPassword = "", identifierLabel }: LoginFormProps) {
   const router = useRouter();
   const [storeCode, setStoreCode] = useState("");
@@ -46,8 +57,13 @@ export function LoginForm({ role, title, description, defaultIdentifier = "", de
           ...(role === "PLAYER" ? { storeCode, loginId: identifier } : { email: identifier }),
         }),
       });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error ?? "ログインに失敗しました。");
+      const payload = await readLoginResponse(response);
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "ログイン処理でエラーが発生しました。時間をおいて再度お試しください。");
+      }
+      if (!payload?.user) {
+        throw new Error("ログイン情報を確認できませんでした。時間をおいて再度お試しください。");
+      }
 
       if (role === "PLAYER" && payload.user.playerId) {
         router.push(`/players?playerId=${payload.user.playerId}`);
