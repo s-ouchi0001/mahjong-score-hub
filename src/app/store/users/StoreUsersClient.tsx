@@ -261,7 +261,9 @@ export function StoreUsersClient({
                     className="button secondary compact"
                     type="button"
                     disabled={!player.managementNumber}
-                    onClick={() => setQrPlayer(player)}
+                    onClick={() => {
+                      setQrPlayer(player);
+                    }}
                   >
                     QR
                   </button>
