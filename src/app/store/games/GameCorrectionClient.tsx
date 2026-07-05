@@ -28,6 +28,7 @@ export function GameCorrectionClient({ games, scoreSettings }: { games: GameItem
   const [pointUnits, setPointUnits] = useState(selectedGame?.players.map((player) => toUnits(player.finalPoints)) ?? []);
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const hasAllPoints = pointUnits.length === 4 && pointUnits.every((point) => point !== "");
 
   function selectGame(nextGameId: string) {
     const nextGame = gameState.find((game) => game.id === nextGameId);
@@ -37,12 +38,12 @@ export function GameCorrectionClient({ games, scoreSettings }: { games: GameItem
   }
 
   const calculated = useMemo(() => {
-    if (!selectedGame) return [];
+    if (!selectedGame || !hasAllPoints) return [];
     return calculateResults(
       selectedGame.players.map((player, index) => ({ playerId: player.id, points: fromUnits(pointUnits[index] ?? "0") })),
       scoreSettings,
     );
-  }, [pointUnits, scoreSettings, selectedGame]);
+  }, [pointUnits, scoreSettings, selectedGame, hasAllPoints]);
 
   function playerName(playerId: string) {
     return selectedGame?.players.find((player) => player.id === playerId)?.name ?? "-";
@@ -50,6 +51,10 @@ export function GameCorrectionClient({ games, scoreSettings }: { games: GameItem
 
   async function saveCorrection() {
     if (!selectedGame) return;
+    if (!hasAllPoints) {
+      setMessage({ type: "error", text: "4人分の点数を入力してください。" });
+      return;
+    }
     setIsSaving(true);
     setMessage(null);
     try {
@@ -116,7 +121,7 @@ export function GameCorrectionClient({ games, scoreSettings }: { games: GameItem
                     id={`correction-${player.id}`}
                     type="number"
                     min="0"
-                    value={pointUnits[index] ?? "0"}
+                    value={pointUnits[index] ?? ""}
                     onChange={(event) => setPointUnits((current) => current.map((point, currentIndex) => currentIndex === index ? event.target.value.replace(/\D/g, "") : point))}
                   />
                   <span className="fixed-point-suffix">00</span>
@@ -124,9 +129,14 @@ export function GameCorrectionClient({ games, scoreSettings }: { games: GameItem
               </div>
             ))}
           </div>
-          <button className="button" type="button" onClick={saveCorrection} disabled={isSaving}>
-            修正を保存
-          </button>
+          <div className="actions">
+            <button className="button secondary" type="button" onClick={() => setPointUnits(["", "", "", ""])}>
+              未入力に戻す
+            </button>
+            <button className="button" type="button" onClick={saveCorrection} disabled={isSaving}>
+              修正を保存
+            </button>
+          </div>
           {message ? <div className={`message ${message.type}`}>{message.text}</div> : null}
         </div>
       </section>
@@ -138,14 +148,18 @@ export function GameCorrectionClient({ games, scoreSettings }: { games: GameItem
               <tr><th>順位</th><th>プレイヤー</th><th>点数</th><th>スコア</th></tr>
             </thead>
             <tbody>
-              {calculated.map((result) => (
+              {calculated.length ? calculated.map((result) => (
                 <tr key={result.playerId}>
                   <td>{result.rank}位</td>
                   <td>{playerName(result.playerId)}</td>
                   <td>{result.points.toLocaleString()}</td>
                   <td>{result.score.toFixed(1)}</td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan={4} className="muted">4人分の点数を入力すると再計算します。</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

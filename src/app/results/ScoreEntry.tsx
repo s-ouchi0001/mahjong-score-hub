@@ -20,10 +20,6 @@ function totalPoints(points: number[]) {
   return points.reduce((sum, point) => sum + (Number.isFinite(point) ? point : 0), 0);
 }
 
-function toPointUnits(points: number) {
-  return String(Math.trunc(points / 100));
-}
-
 function fromPointUnits(value: string) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return 0;
@@ -31,22 +27,21 @@ function fromPointUnits(value: string) {
 }
 
 export function ScoreEntry({ games, scoreSettings }: { games: ActiveGame[]; scoreSettings: ScoreSettings }) {
-  const startingPoint = scoreSettings.startingPoint ?? 25000;
-  const startingPointUnits = toPointUnits(startingPoint);
   const [gameState, setGameState] = useState(games);
   const [gameId, setGameId] = useState(games[0]?.id ?? "");
   const selectedGame = gameState.find((game) => game.id === gameId) ?? gameState[0];
-  const [pointUnits, setPointUnits] = useState<string[]>(selectedGame?.players.map((player) => toPointUnits(player.currentPoints)) ?? [startingPointUnits, startingPointUnits, startingPointUnits, startingPointUnits]);
+  const [pointUnits, setPointUnits] = useState<string[]>(selectedGame?.players.map(() => "") ?? ["", "", "", ""]);
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const hasAllPoints = pointUnits.length === 4 && pointUnits.every((point) => point !== "");
   const points = pointUnits.map(fromPointUnits);
-  const pointTotal = totalPoints(points);
-  const isTotalOk = pointTotal === 100000;
+  const pointTotal = hasAllPoints ? totalPoints(points) : 0;
+  const isTotalOk = hasAllPoints && pointTotal === 100000;
 
   function selectGame(nextGameId: string) {
     const nextGame = gameState.find((game) => game.id === nextGameId);
     setGameId(nextGameId);
-    setPointUnits(nextGame?.players.map((player) => toPointUnits(player.currentPoints)) ?? [startingPointUnits, startingPointUnits, startingPointUnits, startingPointUnits]);
+    setPointUnits(nextGame?.players.map(() => "") ?? ["", "", "", ""]);
     setMessage(null);
   }
 
@@ -55,12 +50,12 @@ export function ScoreEntry({ games, scoreSettings }: { games: ActiveGame[]; scor
   }
 
   function resetPoints() {
-    setPointUnits([startingPointUnits, startingPointUnits, startingPointUnits, startingPointUnits]);
-    setMessage({ type: "ok", text: `全員${startingPoint.toLocaleString()}点に戻しました。` });
+    setPointUnits(["", "", "", ""]);
+    setMessage({ type: "ok", text: "点数入力を空欄に戻しました。" });
   }
 
   const calculated = useMemo(() => {
-    if (!selectedGame) return [];
+    if (!selectedGame || !hasAllPoints) return [];
     return calculateResults(
       selectedGame.players.map((player, index) => ({
         playerId: player.id,
@@ -68,7 +63,7 @@ export function ScoreEntry({ games, scoreSettings }: { games: ActiveGame[]; scor
       })),
       scoreSettings,
     );
-  }, [selectedGame, pointUnits, scoreSettings]);
+  }, [selectedGame, pointUnits, scoreSettings, hasAllPoints]);
 
   function playerName(playerId: string) {
     return selectedGame?.players.find((player) => player.id === playerId)?.name ?? "-";
@@ -76,6 +71,10 @@ export function ScoreEntry({ games, scoreSettings }: { games: ActiveGame[]; scor
 
   async function finishGame() {
     if (!selectedGame) return;
+    if (!hasAllPoints) {
+      setMessage({ type: "error", text: "4人分の点数を入力してください。" });
+      return;
+    }
     if (!isTotalOk) {
       setMessage({ type: "error", text: "4人の合計が100,000点になるように確認してください。" });
       return;
@@ -98,7 +97,7 @@ export function ScoreEntry({ games, scoreSettings }: { games: ActiveGame[]; scor
       setGameState((current) => {
         const nextGames = current.filter((game) => game.id !== selectedGame.id);
         setGameId(nextGames[0]?.id ?? "");
-        setPointUnits(nextGames[0]?.players.map((player) => toPointUnits(player.currentPoints)) ?? [startingPointUnits, startingPointUnits, startingPointUnits, startingPointUnits]);
+        setPointUnits(nextGames[0]?.players.map(() => "") ?? ["", "", "", ""]);
         return nextGames;
       });
       setMessage({ type: "ok", text: `${selectedGame.tableNumber}卓の${selectedGame.category === "TOURNAMENT" ? "大会" : "通常"}成績を確定しました。` });
@@ -122,7 +121,7 @@ export function ScoreEntry({ games, scoreSettings }: { games: ActiveGame[]; scor
       <section className="panel">
         <div className="score-entry-heading">
           <h2>成績入力</h2>
-          <span className={`badge ${isTotalOk ? "ok" : "warn"}`}>合計 {pointTotal.toLocaleString()}</span>
+          <span className={`badge ${isTotalOk ? "ok" : "warn"}`}>合計 {hasAllPoints ? pointTotal.toLocaleString() : "-"}</span>
         </div>
         <div className="form">
           <div className="field">
@@ -157,7 +156,7 @@ export function ScoreEntry({ games, scoreSettings }: { games: ActiveGame[]; scor
                     type="number"
                     min="0"
                     step="1"
-                    value={pointUnits[index] ?? "0"}
+                    value={pointUnits[index] ?? ""}
                     onChange={(event) => updatePoints(index, event.target.value)}
                   />
                   <span className="fixed-point-suffix">00</span>
@@ -168,7 +167,7 @@ export function ScoreEntry({ games, scoreSettings }: { games: ActiveGame[]; scor
 
           <div className="actions">
             <button className="button secondary" type="button" onClick={resetPoints}>
-              {startingPoint.toLocaleString()}に戻す
+              未入力に戻す
             </button>
             <button className="button" type="button" onClick={finishGame} disabled={isSaving}>
               結果を確定
@@ -192,14 +191,18 @@ export function ScoreEntry({ games, scoreSettings }: { games: ActiveGame[]; scor
               </tr>
             </thead>
             <tbody>
-              {calculated.map((result) => (
+              {calculated.length ? calculated.map((result) => (
                 <tr key={result.playerId}>
                   <td>{result.rank}位</td>
                   <td>{playerName(result.playerId)}</td>
                   <td>{result.points.toLocaleString()}</td>
                   <td>{result.score.toFixed(1)}</td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan={4} className="muted">4人分の点数を入力すると自動計算します。</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
