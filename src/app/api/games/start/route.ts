@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     return badRequest("4席すべて選択してください。");
   }
 
-  const table = await prisma.mahjongTable.findUnique({ where: { id: tableId } });
+  const table = await prisma.mahjongTable.findUnique({ where: { id: tableId }, include: { store: true } });
   if (!table) {
     return notFound("卓が見つかりません。");
   }
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
           gameId: activeGame.id,
           playerId,
           seat: index + 1,
-          currentPoints: 25000,
+          currentPoints: table.store.startingPoint,
         })),
       });
 
@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
           create: resolvedPlayerIds.map((playerId, index) => ({
             playerId,
             seat: index + 1,
-            currentPoints: 25000,
+            currentPoints: table.store.startingPoint,
           })),
         },
       },

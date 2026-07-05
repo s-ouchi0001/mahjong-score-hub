@@ -41,16 +41,22 @@ enum UserRole {
 }
 
 model Store {
-  id          String         @id @default(cuid())
-  name        String
-  storeCode   String         @unique
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  tables      MahjongTable[]
-  players     Player[]
-  games       Game[]
-  users       AppUser[]
-  tournaments Tournament[]
+  id               String         @id @default(cuid())
+  name             String
+  storeCode        String         @unique
+  startingPoint    Int            @default(25000)
+  returnPoint      Int            @default(30000)
+  firstPlaceBonus  Int            @default(20)
+  secondPlaceBonus Int            @default(10)
+  thirdPlaceBonus  Int            @default(-10)
+  fourthPlaceBonus Int            @default(-20)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  tables           MahjongTable[]
+  players          Player[]
+  games            Game[]
+  users            AppUser[]
+  tournaments      Tournament[]
 }
 
 model MahjongTable {

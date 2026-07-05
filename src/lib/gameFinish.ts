@@ -41,7 +41,7 @@ export async function finishGameWithResults({
 
   const game = await prisma.game.findUnique({
     where: { id: gameId },
-    include: { players: true, table: true },
+    include: { players: true, table: true, store: true },
   });
 
   if (!game) {
@@ -61,7 +61,7 @@ export async function finishGameWithResults({
     throw new FinishGameError("対局に参加していないプレイヤーが含まれています。");
   }
 
-  const calculated = calculateResults(results);
+  const calculated = calculateResults(results, game.store);
   const finalCategory = category ?? game.table.defaultCategory;
   const finalTournamentId = finalCategory === GameCategory.TOURNAMENT ? game.table.currentTournamentId : null;
 

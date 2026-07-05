@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { calculateResults } from "@/lib/scoring";
+import { calculateResults, type ScoreSettings } from "@/lib/scoring";
 
 type ActiveGame = {
   id: string;
@@ -30,11 +30,13 @@ function fromPointUnits(value: string) {
   return Math.max(0, Math.trunc(parsed) * 100);
 }
 
-export function ScoreEntry({ games }: { games: ActiveGame[] }) {
+export function ScoreEntry({ games, scoreSettings }: { games: ActiveGame[]; scoreSettings: ScoreSettings }) {
+  const startingPoint = scoreSettings.startingPoint ?? 25000;
+  const startingPointUnits = toPointUnits(startingPoint);
   const [gameState, setGameState] = useState(games);
   const [gameId, setGameId] = useState(games[0]?.id ?? "");
   const selectedGame = gameState.find((game) => game.id === gameId) ?? gameState[0];
-  const [pointUnits, setPointUnits] = useState<string[]>(selectedGame?.players.map((player) => toPointUnits(player.currentPoints)) ?? ["250", "250", "250", "250"]);
+  const [pointUnits, setPointUnits] = useState<string[]>(selectedGame?.players.map((player) => toPointUnits(player.currentPoints)) ?? [startingPointUnits, startingPointUnits, startingPointUnits, startingPointUnits]);
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const points = pointUnits.map(fromPointUnits);
@@ -44,7 +46,7 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
   function selectGame(nextGameId: string) {
     const nextGame = gameState.find((game) => game.id === nextGameId);
     setGameId(nextGameId);
-    setPointUnits(nextGame?.players.map((player) => toPointUnits(player.currentPoints)) ?? ["250", "250", "250", "250"]);
+    setPointUnits(nextGame?.players.map((player) => toPointUnits(player.currentPoints)) ?? [startingPointUnits, startingPointUnits, startingPointUnits, startingPointUnits]);
     setMessage(null);
   }
 
@@ -53,8 +55,8 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
   }
 
   function resetPoints() {
-    setPointUnits(["250", "250", "250", "250"]);
-    setMessage({ type: "ok", text: "全員25,000点に戻しました。" });
+    setPointUnits([startingPointUnits, startingPointUnits, startingPointUnits, startingPointUnits]);
+    setMessage({ type: "ok", text: `全員${startingPoint.toLocaleString()}点に戻しました。` });
   }
 
   const calculated = useMemo(() => {
@@ -64,8 +66,9 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
         playerId: player.id,
         points: points[index] ?? 0,
       })),
+      scoreSettings,
     );
-  }, [selectedGame, pointUnits]);
+  }, [selectedGame, pointUnits, scoreSettings]);
 
   function playerName(playerId: string) {
     return selectedGame?.players.find((player) => player.id === playerId)?.name ?? "-";
@@ -95,7 +98,7 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
       setGameState((current) => {
         const nextGames = current.filter((game) => game.id !== selectedGame.id);
         setGameId(nextGames[0]?.id ?? "");
-        setPointUnits(nextGames[0]?.players.map((player) => toPointUnits(player.currentPoints)) ?? ["250", "250", "250", "250"]);
+        setPointUnits(nextGames[0]?.players.map((player) => toPointUnits(player.currentPoints)) ?? [startingPointUnits, startingPointUnits, startingPointUnits, startingPointUnits]);
         return nextGames;
       });
       setMessage({ type: "ok", text: `${selectedGame.tableNumber}卓の${selectedGame.category === "TOURNAMENT" ? "大会" : "通常"}成績を確定しました。` });
@@ -165,7 +168,7 @@ export function ScoreEntry({ games }: { games: ActiveGame[] }) {
 
           <div className="actions">
             <button className="button secondary" type="button" onClick={resetPoints}>
-              25,000に戻す
+              {startingPoint.toLocaleString()}に戻す
             </button>
             <button className="button" type="button" onClick={finishGame} disabled={isSaving}>
               結果を確定

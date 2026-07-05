@@ -1,27 +1,28 @@
 import { AppShell } from "@/app/components/AppShell";
-import { ScoreEntry } from "@/app/results/ScoreEntry";
+import { GameCorrectionClient } from "@/app/store/games/GameCorrectionClient";
 import { prisma } from "@/lib/prisma";
 import { requireStoreAdmin } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
-export default async function ResultsPage() {
+export default async function StoreGamesPage() {
   const user = await requireStoreAdmin();
-
   const [games, scoreSettings] = await Promise.all([
     prisma.game.findMany({
-      where: { storeId: user.storeId, status: "ACTIVE" },
-      orderBy: { startedAt: "desc" },
+      where: { storeId: user.storeId, status: "FINISHED" },
+      orderBy: { finishedAt: "desc" },
+      take: 100,
       select: {
         id: true,
         category: true,
+        finishedAt: true,
         tournament: { select: { name: true } },
-        table: { select: { tableNumber: true, defaultCategory: true, currentTournament: { select: { name: true } } } },
+        table: { select: { tableNumber: true } },
         players: {
           orderBy: { seat: "asc" },
           select: {
             seat: true,
-            currentPoints: true,
+            finalPoints: true,
             player: { select: { id: true, name: true } },
           },
         },
@@ -44,22 +45,23 @@ export default async function ResultsPage() {
     <AppShell user={user}>
       <section className="page-title">
         <div>
-          <h1>各卓成績入力</h1>
-          <p>卓管理で設定した通常卓・大会卓に合わせて結果を確定します。</p>
+          <h1>成績入力履歴の修正</h1>
+          <p>確定済み半荘の点数を修正し、順位とスコアを再計算します。</p>
         </div>
       </section>
-      <ScoreEntry
+      <GameCorrectionClient
         scoreSettings={scoreSettings}
         games={games.map((game) => ({
           id: game.id,
           tableNumber: game.table.tableNumber,
-          category: game.category ?? game.table.defaultCategory,
-          tournamentName: game.tournament?.name ?? game.table.currentTournament?.name ?? null,
+          category: game.category,
+          tournamentName: game.tournament?.name ?? null,
+          finishedAt: game.finishedAt?.toISOString() ?? null,
           players: game.players.map((gamePlayer) => ({
             id: gamePlayer.player.id,
             name: gamePlayer.player.name,
             seat: gamePlayer.seat,
-            currentPoints: gamePlayer.currentPoints,
+            finalPoints: gamePlayer.finalPoints,
           })),
         }))}
       />

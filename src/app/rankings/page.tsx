@@ -23,12 +23,20 @@ function resolveMode(value: string | string[] | undefined): RankingMode {
 export default async function RankingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ mode?: string | string[] }>;
+  searchParams: Promise<{ mode?: string | string[]; tournamentId?: string | string[] }>;
 }) {
   const user = await requireUser();
   if (user.role === "SUPER_ADMIN") redirect("/super");
 
-  const mode = resolveMode((await searchParams).mode);
+  const params = await searchParams;
+  const mode = resolveMode(params.mode);
+  const selectedTournamentId = Array.isArray(params.tournamentId) ? params.tournamentId[0] : params.tournamentId;
+  const tournaments = await prisma.tournament.findMany({
+    where: { storeId: user.storeId },
+    orderBy: [{ startsAt: "desc" }, { createdAt: "desc" }],
+    select: { id: true, name: true },
+  });
+  const tournamentId = mode === "tournament" ? selectedTournamentId || tournaments[0]?.id || "" : "";
   const players = await prisma.player.findMany({
     where: {
       storeId: user.storeId,
@@ -43,7 +51,7 @@ export default async function RankingsPage({
         where: {
           game: {
             status: "FINISHED",
-            ...(mode === "tournament" ? { category: GameCategory.TOURNAMENT } : {}),
+            ...(mode === "tournament" ? { category: GameCategory.TOURNAMENT, ...(tournamentId ? { tournamentId } : {}) } : {}),
           },
           rank: { not: null },
           score: { not: null },
@@ -95,6 +103,26 @@ export default async function RankingsPage({
           </Link>
         </div>
       </section>
+
+      {mode === "tournament" ? (
+        <section className="panel">
+          <div className="list-header">
+            <h2>大会選択</h2>
+            <div className="segment-control compact-segment tournament-links" role="group" aria-label="大会選択">
+              {tournaments.map((tournament) => (
+                <Link
+                  key={tournament.id}
+                  className={tournament.id === tournamentId ? "active" : ""}
+                  href={`/rankings?mode=tournament&tournamentId=${tournament.id}`}
+                >
+                  {tournament.name}
+                </Link>
+              ))}
+              {!tournaments.length ? <span className="muted">登録済み大会はありません。</span> : null}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="panel">
         <div className="table-wrap">

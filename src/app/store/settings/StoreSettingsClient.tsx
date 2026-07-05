@@ -9,8 +9,24 @@ type Tournament = {
   endsAt: string | Date | null;
 };
 
-export function StoreSettingsClient({ tournaments }: { tournaments: Tournament[] }) {
+type ScoreSettings = {
+  startingPoint: number;
+  returnPoint: number;
+  firstPlaceBonus: number;
+  secondPlaceBonus: number;
+  thirdPlaceBonus: number;
+  fourthPlaceBonus: number;
+};
+
+export function StoreSettingsClient({
+  tournaments,
+  scoreSettings,
+}: {
+  tournaments: Tournament[];
+  scoreSettings: ScoreSettings;
+}) {
   const [items, setItems] = useState(tournaments);
+  const [settings, setSettings] = useState(scoreSettings);
   const [name, setName] = useState("");
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -36,8 +52,68 @@ export function StoreSettingsClient({ tournaments }: { tournaments: Tournament[]
     }
   }
 
+  async function saveScoreSettings() {
+    setIsSaving(true);
+    setMessage(null);
+    try {
+      const response = await fetch("/api/store/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "スコア設定の保存に失敗しました。");
+      setSettings(payload.store);
+      setMessage({ type: "ok", text: "スコア設定を保存しました。次回以降の成績確定から反映されます。" });
+    } catch (error) {
+      setMessage({ type: "error", text: error instanceof Error ? error.message : "スコア設定の保存に失敗しました。" });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  function updateSetting(key: keyof ScoreSettings, value: string) {
+    setSettings((current) => ({ ...current, [key]: Number(value) }));
+  }
+
   return (
     <div className="grid two">
+      <section className="panel">
+        <h2>スコア設定</h2>
+        <div className="form">
+          <div className="user-form-grid">
+            <div className="field">
+              <label htmlFor="starting-point">持ち点</label>
+              <input id="starting-point" type="number" step="100" value={settings.startingPoint} onChange={(event) => updateSetting("startingPoint", event.target.value)} />
+            </div>
+            <div className="field">
+              <label htmlFor="return-point">返し点</label>
+              <input id="return-point" type="number" step="100" value={settings.returnPoint} onChange={(event) => updateSetting("returnPoint", event.target.value)} />
+            </div>
+            <div className="field">
+              <label htmlFor="first-bonus">1位 順位点</label>
+              <input id="first-bonus" type="number" value={settings.firstPlaceBonus} onChange={(event) => updateSetting("firstPlaceBonus", event.target.value)} />
+            </div>
+            <div className="field">
+              <label htmlFor="second-bonus">2位 順位点</label>
+              <input id="second-bonus" type="number" value={settings.secondPlaceBonus} onChange={(event) => updateSetting("secondPlaceBonus", event.target.value)} />
+            </div>
+            <div className="field">
+              <label htmlFor="third-bonus">3位 順位点</label>
+              <input id="third-bonus" type="number" value={settings.thirdPlaceBonus} onChange={(event) => updateSetting("thirdPlaceBonus", event.target.value)} />
+            </div>
+            <div className="field">
+              <label htmlFor="fourth-bonus">4位 順位点</label>
+              <input id="fourth-bonus" type="number" value={settings.fourthPlaceBonus} onChange={(event) => updateSetting("fourthPlaceBonus", event.target.value)} />
+            </div>
+          </div>
+          <button className="button" type="button" onClick={saveScoreSettings} disabled={isSaving}>
+            スコア設定を保存
+          </button>
+          {message ? <div className={`message ${message.type}`}>{message.text}</div> : null}
+        </div>
+      </section>
+
       <section className="panel">
         <h2>大会登録</h2>
         <div className="form">
@@ -56,7 +132,6 @@ export function StoreSettingsClient({ tournaments }: { tournaments: Tournament[]
               大会を登録
             </button>
           </div>
-          {message ? <div className={`message ${message.type}`}>{message.text}</div> : null}
         </div>
       </section>
 
@@ -95,7 +170,7 @@ export function StoreSettingsClient({ tournaments }: { tournaments: Tournament[]
         <div className="setting-placeholder-list">
           <div>
             <strong>順位点・返し点</strong>
-            <span>現在は25,000点持ち、順位点固定で自動計算しています。</span>
+            <span>この画面で店舗ごとの計算ルールを変更できます。</span>
           </div>
           <div>
             <strong>段位・雀力ポイント</strong>

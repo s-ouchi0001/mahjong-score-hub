@@ -85,9 +85,12 @@ export function SessionNav({ session: initialSession }: { session: Session }) {
       <nav className="nav" aria-label="主要画面">
         <Link href="/">本部</Link>
         <Link href="/store/users">ユーザ管理</Link>
+        <Link href="/store/qr-print">QR印刷</Link>
         <Link href="/store/players">成績一覧</Link>
         <Link href="/tables/participants">卓管理</Link>
         <Link href="/results">成績入力</Link>
+        <Link href="/store/games">成績修正</Link>
+        <Link href="/store/reports">レポート</Link>
         <Link href="/store/settings">設定</Link>
         <Link href="/rankings">ランキング</Link>
         <Link href="/players">プレイヤー成績</Link>

@@ -893,6 +893,51 @@ textarea {
   padding: 10px;
 }
 
+.qr-card-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.qr-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  padding: 14px;
+  text-align: center;
+}
+
+.qr-card h3 {
+  font-size: 1.3rem;
+  margin: 4px 0;
+}
+
+.qr-card span,
+.qr-card p {
+  color: var(--muted);
+  font-weight: 700;
+  margin: 0;
+}
+
+.qr-empty {
+  align-items: center;
+  background: #f4f7f5;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  display: flex;
+  height: 180px;
+  justify-content: center;
+  width: 180px;
+}
+
+.tournament-links {
+  display: flex;
+  flex-wrap: wrap;
+}
+
 .player-rating-heading {
   align-items: center;
   display: flex;
@@ -1199,5 +1244,33 @@ textarea {
   .login-card {
     padding: 18px;
     width: 100%;
+  }
+}
+
+@media print {
+  .no-print,
+  .topbar {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .main,
+  .panel,
+  .print-root {
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .qr-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .qr-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
