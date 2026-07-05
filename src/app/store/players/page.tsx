@@ -2,6 +2,7 @@ import { AppShell } from "@/app/components/AppShell";
 import { GameCategory } from "@prisma/client";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { buildRating } from "@/lib/rating";
 import { requireStoreAdmin } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,8 @@ type PlayerSummary = {
   lastRate: number;
   averageScore: number;
   totalScore: number;
+  dan: string;
+  jankiPoint: number;
 };
 
 type StatsMode = "total" | "recent" | "tournament";
@@ -88,7 +91,7 @@ export default async function StorePlayersPage({
     const topCount = records.filter((record) => record.rank === 1).length;
     const lastCount = records.filter((record) => record.rank === 4).length;
 
-    return {
+    const summary = {
       id: player.id,
       name: player.name,
       managementNumber: player.managementNumber,
@@ -98,6 +101,10 @@ export default async function StorePlayersPage({
       lastRate: gameCount ? round((lastCount / gameCount) * 100, 1) : 0,
       averageScore: gameCount ? round(totalScore / gameCount, 1) : 0,
       totalScore: round(totalScore, 1),
+    };
+    return {
+      ...summary,
+      ...buildRating(summary),
     };
   });
 
@@ -135,6 +142,8 @@ export default async function StorePlayersPage({
                 <th>ラス率</th>
                 <th>平均スコア</th>
                 <th>累計スコア</th>
+                <th>段位</th>
+                <th>雀力P</th>
                 <th>本人画面</th>
               </tr>
             </thead>
@@ -149,6 +158,8 @@ export default async function StorePlayersPage({
                   <td>{player.lastRate.toFixed(1)}%</td>
                   <td>{player.averageScore.toFixed(1)}</td>
                   <td>{player.totalScore.toFixed(1)}</td>
+                  <td>{player.dan}</td>
+                  <td>{player.jankiPoint.toLocaleString()}</td>
                   <td>
                     <Link className="text-link" href={`/players?playerId=${player.id}`}>
                       開く

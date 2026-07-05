@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { forbidden, notFound, unauthorized } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { buildRating } from "@/lib/rating";
 
 type Params = {
   params: Promise<{ playerId: string }>;
@@ -62,17 +63,31 @@ export async function GET(request: NextRequest, { params }: Params) {
   const totalScore = targetRecords.reduce((sum, record) => sum + (record.score ?? 0), 0);
   const topCount = targetRecords.filter((record) => record.rank === 1).length;
   const lastCount = targetRecords.filter((record) => record.rank === 4).length;
+  const averageRank = count ? Math.round((totalRank / count) * 100) / 100 : 0;
+  const topRate = count ? Math.round((topCount / count) * 1000) / 10 : 0;
+  const lastRate = count ? Math.round((lastCount / count) * 1000) / 10 : 0;
+  const averageScore = count ? Math.round((totalScore / count) * 10) / 10 : 0;
+  const roundedTotalScore = Math.round(totalScore * 10) / 10;
+  const rating = buildRating({
+    gameCount: count,
+    averageRank,
+    topRate,
+    lastRate,
+    totalScore: roundedTotalScore,
+  });
 
   return NextResponse.json({
     player,
     mode,
     stats: {
       gameCount: count,
-      averageRank: count ? Math.round((totalRank / count) * 100) / 100 : 0,
-      topRate: count ? Math.round((topCount / count) * 1000) / 10 : 0,
-      lastRate: count ? Math.round((lastCount / count) * 1000) / 10 : 0,
-      averageScore: count ? Math.round((totalScore / count) * 10) / 10 : 0,
-      totalScore: Math.round(totalScore * 10) / 10,
+      averageRank,
+      topRate,
+      lastRate,
+      averageScore,
+      totalScore: roundedTotalScore,
+      dan: rating.dan,
+      jankiPoint: rating.jankiPoint,
       recentGames: targetRecords.slice(0, 10).map((record) => ({
         gameId: record.gameId,
         tableNumber: record.game.table.tableNumber,

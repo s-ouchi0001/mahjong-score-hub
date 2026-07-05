@@ -20,6 +20,8 @@ type StatsPayload = {
     lastRate: number;
     averageScore: number;
     totalScore: number;
+    dan: string;
+    jankiPoint: number;
     recentGames: {
       gameId: string;
       tableNumber: number;
@@ -30,6 +32,21 @@ type StatsPayload = {
       score: number | null;
     }[];
   };
+};
+
+type RankingPayload = {
+  mode: "regular" | "tournament";
+  rankings: {
+    id: string;
+    rank: number;
+    name: string;
+    managementNumber: string | null;
+    gameCount: number;
+    averageRank: number;
+    totalScore: number;
+    dan: string;
+    jankiPoint: number;
+  }[];
 };
 
 export function PlayerStats({
@@ -44,6 +61,8 @@ export function PlayerStats({
   const [playerId, setPlayerId] = useState(lockedPlayerId ?? initialPlayerId ?? players[0]?.id ?? "");
   const [mode, setMode] = useState<StatsMode>("total");
   const [payload, setPayload] = useState<StatsPayload | null>(null);
+  const [rankingMode, setRankingMode] = useState<"regular" | "tournament">("regular");
+  const [ranking, setRanking] = useState<RankingPayload | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -54,6 +73,12 @@ export function PlayerStats({
       .then(setPayload)
       .finally(() => setLoading(false));
   }, [playerId, mode]);
+
+  useEffect(() => {
+    fetch(`/api/rankings?mode=${rankingMode}`)
+      .then((response) => response.json())
+      .then(setRanking);
+  }, [rankingMode]);
 
   return (
     <div className="grid">
@@ -108,6 +133,64 @@ export function PlayerStats({
             <span>平均スコア</span>
             <strong>{payload?.stats.averageScore.toFixed(1) ?? "0.0"}</strong>
           </div>
+          <div className="metric">
+            <span>段位</span>
+            <strong>{payload?.stats.dan ?? "新人"}</strong>
+          </div>
+          <div className="metric">
+            <span>雀力ポイント</span>
+            <strong>{payload?.stats.jankiPoint.toLocaleString() ?? "1,000"}</strong>
+          </div>
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="score-entry-heading">
+          <h2>同じ雀荘のランキング</h2>
+          <div className="segment-control compact-segment" role="group" aria-label="ランキング表示">
+            <button className={rankingMode === "regular" ? "active" : ""} type="button" onClick={() => setRankingMode("regular")}>
+              通常
+            </button>
+            <button className={rankingMode === "tournament" ? "active" : ""} type="button" onClick={() => setRankingMode("tournament")}>
+              大会
+            </button>
+          </div>
+        </div>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>順位</th>
+                <th>プレイヤー</th>
+                <th>段位</th>
+                <th>雀力P</th>
+                <th>半荘数</th>
+                <th>平均順位</th>
+                <th>累計スコア</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ranking?.rankings.length ? (
+                ranking.rankings.slice(0, 20).map((player) => (
+                  <tr key={player.id} className={player.id === playerId ? "highlight-row" : ""}>
+                    <td>{player.rank}位</td>
+                    <td>{player.managementNumber ? `${player.managementNumber} / ${player.name}` : player.name}</td>
+                    <td>{player.dan}</td>
+                    <td>{player.jankiPoint.toLocaleString()}</td>
+                    <td>{player.gameCount}</td>
+                    <td>{player.averageRank.toFixed(2)}</td>
+                    <td>{player.totalScore.toFixed(1)}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="muted">
+                    まだランキング対象の成績がありません。
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
 

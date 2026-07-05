@@ -87,6 +87,7 @@ export function SessionNav({ session: initialSession }: { session: Session }) {
         <Link href="/store/players">成績一覧</Link>
         <Link href="/tables/participants">卓管理</Link>
         <Link href="/results">成績入力</Link>
+        <Link href="/store/settings">設定</Link>
         <Link href="/players">プレイヤー成績</Link>
         {session?.role === "STORE_ADMIN" ? null : <Link href="/login">ログイン</Link>}
         {session?.role === "STORE_ADMIN" ? (

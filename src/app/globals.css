@@ -821,6 +821,29 @@ textarea {
   gap: 18px;
 }
 
+.highlight-row {
+  background: #eef8f1;
+}
+
+.setting-placeholder-list {
+  display: grid;
+  gap: 12px;
+}
+
+.setting-placeholder-list div {
+  background: #f7faf8;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+}
+
+.setting-placeholder-list span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
 .compact-segment button,
 .compact-segment a {
   min-height: 34px;
