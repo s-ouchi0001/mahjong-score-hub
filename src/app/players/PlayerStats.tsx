@@ -60,6 +60,22 @@ export function PlayerStats({
 
   return (
     <div className="grid">
+      <section className="player-rating-overview" aria-label="段位と雀力ポイント">
+        <div className="rating-hero">
+          <div>
+            <span>段位</span>
+            <strong>{payload?.stats.dan ?? "新人"}</strong>
+          </div>
+          <div>
+            <span>
+              雀力ポイント
+              <Link className="help-link" href="/janki-point">説明</Link>
+            </span>
+            <strong>{payload?.stats.jankiPoint.toLocaleString() ?? "1,000"}</strong>
+          </div>
+        </div>
+      </section>
+
       {lockedPlayerId ? null : (
         <section className="panel">
           <div className="field">
@@ -77,22 +93,7 @@ export function PlayerStats({
 
       <section className="panel">
         <div className="score-entry-heading">
-          <div className="player-rating-heading">
-            <h2>プレイヤー成績 <span className="heading-subname">{payload?.player.name ?? ""} {loading ? "集計中" : ""}</span></h2>
-            <div className="rating-hero" aria-label="段位と雀力ポイント">
-              <div>
-                <span>段位</span>
-                <strong>{payload?.stats.dan ?? "新人"}</strong>
-              </div>
-              <div>
-                <span>
-                  雀力ポイント
-                  <Link className="help-link" href="/janki-point">説明</Link>
-                </span>
-                <strong>{payload?.stats.jankiPoint.toLocaleString() ?? "1,000"}</strong>
-              </div>
-            </div>
-          </div>
+          <h2>プレイヤー成績 <span className="heading-subname">{payload?.player.name ?? ""} {loading ? "集計中" : ""}</span></h2>
           <div className="segment-control compact-segment" role="group" aria-label="成績表示">
             <button className={mode === "total" ? "active" : ""} type="button" onClick={() => setMode("total")}>
               通算

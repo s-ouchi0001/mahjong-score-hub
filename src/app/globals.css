@@ -855,6 +855,18 @@ textarea {
   margin: 0;
 }
 
+.player-rating-overview {
+  display: flex;
+  justify-content: flex-end;
+  margin: -122px 0 18px;
+  min-height: 104px;
+  pointer-events: none;
+}
+
+.player-rating-overview .rating-hero {
+  pointer-events: auto;
+}
+
 .heading-subname {
   color: var(--muted);
   font-size: 0.72em;
@@ -1008,6 +1020,12 @@ textarea {
   .list-header {
     align-items: stretch;
     display: grid;
+  }
+
+  .player-rating-overview {
+    justify-content: flex-start;
+    margin: 0 0 14px;
+    min-height: 0;
   }
 }
 
