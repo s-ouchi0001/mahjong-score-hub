@@ -29,7 +29,9 @@ export default async function StoreUsersPage() {
       <section className="page-title">
         <div>
           <h1>ユーザ管理</h1>
-          <p>管理番号の設定と入退場を管理します。</p>
+          <p>
+            {user.store.name} のユーザを管理します。店舗ID: {user.store.storeCode}
+          </p>
         </div>
       </section>
       <StoreUsersClient
