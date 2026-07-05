@@ -42,7 +42,6 @@ export async function GET(request: NextRequest, { params }: Params) {
       playerId,
       game: {
         status: "FINISHED",
-        ...(mode === "tournament" ? { category: GameCategory.TOURNAMENT } : {}),
       },
       rank: { not: null },
       score: { not: null },
@@ -57,7 +56,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     },
   });
 
-  const targetRecords = mode === "recent" ? records.slice(0, 10) : records;
+  const targetRecords = mode === "recent" ? records.slice(0, 10) : mode === "tournament" ? records.filter((record) => record.game.category === GameCategory.TOURNAMENT) : records;
   const count = targetRecords.length;
   const totalRank = targetRecords.reduce((sum, record) => sum + (record.rank ?? 0), 0);
   const totalScore = targetRecords.reduce((sum, record) => sum + (record.score ?? 0), 0);
@@ -68,12 +67,17 @@ export async function GET(request: NextRequest, { params }: Params) {
   const lastRate = count ? Math.round((lastCount / count) * 1000) / 10 : 0;
   const averageScore = count ? Math.round((totalScore / count) * 10) / 10 : 0;
   const roundedTotalScore = Math.round(totalScore * 10) / 10;
+  const ratingCount = records.length;
+  const ratingTotalRank = records.reduce((sum, record) => sum + (record.rank ?? 0), 0);
+  const ratingTotalScore = records.reduce((sum, record) => sum + (record.score ?? 0), 0);
+  const ratingTopCount = records.filter((record) => record.rank === 1).length;
+  const ratingLastCount = records.filter((record) => record.rank === 4).length;
   const rating = buildRating({
-    gameCount: count,
-    averageRank,
-    topRate,
-    lastRate,
-    totalScore: roundedTotalScore,
+    gameCount: ratingCount,
+    averageRank: ratingCount ? Math.round((ratingTotalRank / ratingCount) * 100) / 100 : 0,
+    topRate: ratingCount ? Math.round((ratingTopCount / ratingCount) * 1000) / 10 : 0,
+    lastRate: ratingCount ? Math.round((ratingLastCount / ratingCount) * 1000) / 10 : 0,
+    totalScore: Math.round(ratingTotalScore * 10) / 10,
   });
 
   return NextResponse.json({

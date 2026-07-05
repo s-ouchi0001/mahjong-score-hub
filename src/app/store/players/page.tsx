@@ -62,7 +62,6 @@ export default async function StorePlayersPage({
         where: {
           game: {
             status: "FINISHED",
-            ...(mode === "tournament" ? { category: GameCategory.TOURNAMENT } : {}),
           },
           rank: { not: null },
           score: { not: null },
@@ -75,6 +74,7 @@ export default async function StorePlayersPage({
           score: true,
           game: {
             select: {
+              category: true,
               finishedAt: true,
             },
           },
@@ -84,7 +84,7 @@ export default async function StorePlayersPage({
   });
 
   const summaries: PlayerSummary[] = players.map((player) => {
-    const records = mode === "recent" ? player.gamePlayers.slice(0, 10) : player.gamePlayers;
+    const records = mode === "recent" ? player.gamePlayers.slice(0, 10) : mode === "tournament" ? player.gamePlayers.filter((record) => record.game.category === GameCategory.TOURNAMENT) : player.gamePlayers;
     const gameCount = records.length;
     const totalRank = records.reduce((sum, record) => sum + (record.rank ?? 0), 0);
     const totalScore = records.reduce((sum, record) => sum + (record.score ?? 0), 0);
@@ -104,7 +104,13 @@ export default async function StorePlayersPage({
     };
     return {
       ...summary,
-      ...buildRating(summary),
+      ...buildRating({
+        gameCount: player.gamePlayers.length,
+        averageRank: player.gamePlayers.length ? round(player.gamePlayers.reduce((sum, record) => sum + (record.rank ?? 0), 0) / player.gamePlayers.length, 2) : 0,
+        topRate: player.gamePlayers.length ? round((player.gamePlayers.filter((record) => record.rank === 1).length / player.gamePlayers.length) * 100, 1) : 0,
+        lastRate: player.gamePlayers.length ? round((player.gamePlayers.filter((record) => record.rank === 4).length / player.gamePlayers.length) * 100, 1) : 0,
+        totalScore: round(player.gamePlayers.reduce((sum, record) => sum + (record.score ?? 0), 0), 1),
+      }),
     };
   });
 
