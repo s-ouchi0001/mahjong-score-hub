@@ -7,7 +7,11 @@ const cookieName = "mahjong-score-session";
 const maxAgeSeconds = 60 * 60 * 24 * 30;
 
 function secret() {
-  return process.env.AUTH_SECRET || "dev-only-change-me";
+  const value = process.env.AUTH_SECRET;
+  if (!value && process.env.NODE_ENV === "production") {
+    throw new Error("AUTH_SECRET を設定してください。");
+  }
+  return value || "dev-only-change-me";
 }
 
 function base64Url(input: string) {
@@ -65,20 +69,20 @@ export async function authenticate(email: string, password: string) {
   return user;
 }
 
-export async function authenticatePlayerByLoginId(loginId: string, password: string) {
-  const users = await prisma.appUser.findMany({
+export async function authenticatePlayerByLoginId(storeCode: string, loginId: string, password: string) {
+  const user = await prisma.appUser.findFirst({
     where: {
       role: "PLAYER",
+      store: {
+        storeCode: storeCode.trim().toUpperCase(),
+      },
       player: {
         managementNumber: loginId.trim(),
       },
     },
     include: { store: true, player: true },
-    take: 2,
   });
 
-  if (users.length > 1) return { status: "DUPLICATE" as const };
-  const user = users[0];
   if (!user || !verifyPassword(password, user.passwordHash)) {
     return { status: "INVALID" as const };
   }

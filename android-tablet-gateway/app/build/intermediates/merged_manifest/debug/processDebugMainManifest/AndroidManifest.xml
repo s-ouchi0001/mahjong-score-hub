@@ -25,7 +25,7 @@
         android:debuggable="true"
         android:extractNativeLibs="false"
         android:label="麻雀卓点数送信"
-        android:testOnly="true"
+        android:testOnly="false"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true" >
         <activity

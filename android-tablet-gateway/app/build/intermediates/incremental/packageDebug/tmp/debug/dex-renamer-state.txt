@@ -1,4 +1,4 @@
-#Wed Jul 01 21:31:19 JST 2026
+#Fri Jul 03 22:56:09 JST 2026
 base.0=/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/build/intermediates/dex/debug/mergeExtDexDebug/classes.dex
 base.1=/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/build/intermediates/dex/debug/mergeProjectDexDebug/0/classes.dex
 base.2=/Users/user/Documents/麻雀採点収集機能/android-tablet-gateway/app/build/intermediates/dex/debug/mergeProjectDexDebug/3/classes.dex

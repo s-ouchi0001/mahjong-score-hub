@@ -30,7 +30,7 @@ export default async function ResultsPage() {
       <section className="page-title">
         <div>
           <h1>各卓成績入力</h1>
-          <p>対局中の卓を選び、最終点数を入力して結果を確定します。</p>
+          <p>対局中の卓を選び、通常成績または大会成績として結果を確定します。</p>
         </div>
       </section>
       <ScoreEntry

@@ -29,6 +29,11 @@ enum ResultSource {
   IMAGE_RECOGNITION
 }
 
+enum GameCategory {
+  REGULAR
+  TOURNAMENT
+}
+
 enum UserRole {
   STORE_ADMIN
   PLAYER
@@ -37,6 +42,7 @@ enum UserRole {
 model Store {
   id        String         @id @default(cuid())
   name      String
+  storeCode String         @unique
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
   tables    MahjongTable[]
@@ -106,6 +112,7 @@ model Game {
   storeId        String
   tableId        String
   status         GameStatus      @default(ACTIVE)
+  category       GameCategory    @default(REGULAR)
   resultSource   ResultSource?
   resultPayload  Json?
   startedAt      DateTime        @default(now())
@@ -118,6 +125,7 @@ model Game {
   pointSnapshots PointSnapshot[]
 
   @@index([storeId, status, startedAt])
+  @@index([storeId, category, status, startedAt])
   @@index([tableId, status])
 }
 

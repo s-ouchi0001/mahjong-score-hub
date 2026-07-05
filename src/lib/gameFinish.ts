@@ -1,4 +1,4 @@
-import { Prisma, ResultSource } from "@prisma/client";
+import { GameCategory, Prisma, ResultSource } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { calculateResults } from "@/lib/scoring";
 
@@ -22,12 +22,14 @@ export async function finishGameWithResults({
   source,
   payload,
   storeId,
+  category,
 }: {
   gameId: string;
   results: FinishResultInput[];
   source: ResultSource;
   payload?: Prisma.InputJsonValue;
   storeId?: string;
+  category?: GameCategory;
 }) {
   if (!Array.isArray(results) || results.length !== 4) {
     throw new FinishGameError("results は playerId と points を持つ4件が必要です。");
@@ -83,6 +85,7 @@ export async function finishGameWithResults({
       where: { id: gameId },
       data: {
         status: "FINISHED",
+        category: category ?? GameCategory.REGULAR,
         resultSource: source,
         resultPayload: payload ?? undefined,
         finishedAt: new Date(),
