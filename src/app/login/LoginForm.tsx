@@ -20,7 +20,7 @@ async function readLoginResponse(response: Response) {
   if (!text) return null;
 
   try {
-    return JSON.parse(text) as { error?: string; user?: { role?: "SUPER_ADMIN" | "STORE_ADMIN" | "PLAYER"; playerId?: string | null } };
+    return JSON.parse(text) as { error?: string; user?: { role?: "SUPER_ADMIN" | "STORE_ADMIN" | "PLAYER"; playerId?: string | null; mustChangePassword?: boolean } };
   } catch {
     return null;
   }
@@ -68,6 +68,8 @@ export function LoginForm({ role, title, description, defaultIdentifier = "", de
 
       if (payload.user.role === "SUPER_ADMIN") {
         router.push("/super");
+      } else if (payload.user.role === "PLAYER" && payload.user.mustChangePassword) {
+        router.push("/change-password");
       } else if (role === "PLAYER" && payload.user.playerId) {
         router.push(`/players?playerId=${payload.user.playerId}`);
       } else {

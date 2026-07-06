@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function PlayersPage() {
   const user = await requireUser();
   if (user.role === "SUPER_ADMIN") redirect("/super");
+  if (user.role === "PLAYER" && user.mustChangePassword) redirect("/change-password");
   const players =
     user.role === "PLAYER" && user.playerId
       ? await prisma.player.findMany({ where: { id: user.playerId }, orderBy: { name: "asc" } })

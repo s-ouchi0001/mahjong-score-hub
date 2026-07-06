@@ -156,7 +156,8 @@ async function main() {
           role: "PLAYER",
           storeId: store.id,
           playerId: player.id,
-          passwordHash: hashPassword("password"),
+          passwordHash: hashPassword("0000"),
+          mustChangePassword: true,
         },
         create: {
           storeId: store.id,
@@ -164,7 +165,8 @@ async function main() {
           email: `player${index + 1}@${store.id}.example.com`,
           name,
           role: "PLAYER",
-          passwordHash: hashPassword("password"),
+          passwordHash: hashPassword("0000"),
+          mustChangePassword: true,
         },
       });
     }

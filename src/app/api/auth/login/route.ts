@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
         storeId: result.user.storeId,
         storeName: result.user.store.name,
         playerId: result.user.playerId,
+        mustChangePassword: result.user.mustChangePassword,
       },
     });
     response.cookies.set(cookie.name, cookie.value, cookie.options);
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
       storeId: user.storeId,
       storeName: user.store.name,
       playerId: user.playerId,
+      mustChangePassword: user.mustChangePassword,
     },
   });
   response.cookies.set(cookie.name, cookie.value, cookie.options);

@@ -103,17 +103,18 @@ model Player {
 }
 
 model AppUser {
-  id           String   @id @default(cuid())
-  storeId      String
-  playerId     String?
-  role         UserRole
-  email        String   @unique
-  name         String
-  passwordHash String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  store        Store    @relation(fields: [storeId], references: [id])
-  player       Player?  @relation(fields: [playerId], references: [id])
+  id                 String   @id @default(cuid())
+  storeId            String
+  playerId           String?
+  role               UserRole
+  email              String   @unique
+  name               String
+  passwordHash       String
+  mustChangePassword Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  store              Store    @relation(fields: [storeId], references: [id])
+  player             Player?  @relation(fields: [playerId], references: [id])
 
   @@index([storeId, role])
   @@index([playerId])

@@ -79,7 +79,10 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       if ("password" in body) {
         await tx.appUser.updateMany({
           where: { playerId, storeId: user.storeId },
-          data: { passwordHash: hashPassword(password) },
+          data: {
+            passwordHash: hashPassword(password),
+            mustChangePassword: true,
+          },
         });
       }
 

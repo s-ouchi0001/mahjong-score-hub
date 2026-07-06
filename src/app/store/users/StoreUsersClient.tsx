@@ -27,7 +27,6 @@ export function StoreUsersClient({
   const [newPlayer, setNewPlayer] = useState({
     name: "",
     managementNumber: "",
-    password: "",
     isCheckedIn: true,
   });
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -64,7 +63,7 @@ export function StoreUsersClient({
           checkedOutAt: payload.player.checkedOutAt,
         },
       ]);
-      setNewPlayer({ name: "", managementNumber: "", password: "", isCheckedIn: true });
+      setNewPlayer({ name: "", managementNumber: "", isCheckedIn: true });
       setMessage({ type: "ok", text: "ユーザを追加しました。" });
     } catch (error) {
       setMessage({ type: "error", text: error instanceof Error ? error.message : "追加に失敗しました。" });
@@ -154,8 +153,11 @@ export function StoreUsersClient({
               <input id="new-number" value={newPlayer.managementNumber} onChange={(event) => setNewPlayer((current) => ({ ...current, managementNumber: event.target.value }))} />
             </div>
             <div className="field">
-              <label htmlFor="new-password">初期パスワード</label>
-              <input id="new-password" type="password" value={newPlayer.password} onChange={(event) => setNewPlayer((current) => ({ ...current, password: event.target.value }))} autoComplete="new-password" />
+              <label>初期パスワード</label>
+              <div className="readonly-setting">
+                <strong>0000</strong>
+                <span>初回ログイン時に変更します</span>
+              </div>
             </div>
           </div>
           <label className="check-line">
@@ -304,7 +306,10 @@ export function StoreUsersClient({
               </button>
             </div>
             <div className="qr-layout">
-              <img src={qrImageUrl(qrPlayer)} alt={`${qrPlayer.name} ログインQR`} width={220} height={220} />
+              <div className="qr-preview-card">
+                <img src={qrImageUrl(qrPlayer)} alt={`${qrPlayer.name} ログインQR`} width={220} height={220} />
+                <p className="initial-password">初回パスワード 0000</p>
+              </div>
               <div className="form">
                 <div className="field">
                   <label>店舗ID</label>

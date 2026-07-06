@@ -97,6 +97,7 @@ export function QrPrintClient({
             ) : (
               <div className="qr-empty">ユーザID未設定</div>
             )}
+            <p className="initial-password">初回パスワード 0000</p>
           </article>
         ))}
       </div>

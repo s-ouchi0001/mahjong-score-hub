@@ -30,12 +30,10 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const name = typeof body?.name === "string" ? body.name.trim() : "";
   const managementNumber = typeof body?.managementNumber === "string" ? body.managementNumber.trim() : "";
-  const password = typeof body?.password === "string" ? body.password : "";
   const isCheckedIn = Boolean(body?.isCheckedIn);
 
   if (!name) return badRequest("名前を入力してください。");
   if (!managementNumber) return badRequest("ユーザIDを入力してください。");
-  if (password.trim().length < 4) return badRequest("初期パスワードは4文字以上で入力してください。");
 
   try {
     const created = await prisma.$transaction(async (tx) => {
@@ -57,7 +55,8 @@ export async function POST(request: NextRequest) {
           role: "PLAYER",
           email: `${player.id}@players.internal`,
           name,
-          passwordHash: hashPassword(password),
+          passwordHash: hashPassword("0000"),
+          mustChangePassword: true,
         },
       });
 

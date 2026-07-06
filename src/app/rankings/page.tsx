@@ -27,6 +27,7 @@ export default async function RankingsPage({
 }) {
   const user = await requireUser();
   if (user.role === "SUPER_ADMIN") redirect("/super");
+  if (user.role === "PLAYER" && user.mustChangePassword) redirect("/change-password");
 
   const params = await searchParams;
   const mode = resolveMode(params.mode);
