@@ -22,16 +22,43 @@ export async function POST(request: NextRequest) {
   const store = await prisma.store.findUnique({ where: { id: storeId } });
   if (!store) return badRequest("店舗が見つかりません。");
 
-  const staff = await prisma.appUser.create({
-    data: {
-      storeId,
-      email: loginId,
-      name,
-      role: "STORE_ADMIN",
-      passwordHash: hashPassword(password),
-    },
-    select: { id: true, email: true, name: true, role: true },
-  });
+  try {
+    const staff = await prisma.appUser.create({
+      data: {
+        storeId,
+        email: loginId,
+        name,
+        role: "STORE_ADMIN",
+        passwordHash: hashPassword(password),
+      },
+      select: { id: true, email: true, name: true, role: true, createdAt: true },
+    });
 
-  return NextResponse.json({ staff }, { status: 201 });
+    return NextResponse.json({ staff }, { status: 201 });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("Unique constraint")) {
+      return badRequest("このログインIDはすでに使われています。");
+    }
+    throw error;
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const user = await getCurrentUser();
+  if (!user) return unauthorized();
+  if (user.role !== "SUPER_ADMIN") return forbidden();
+
+  const body = await request.json().catch(() => null);
+  const staffId = typeof body?.staffId === "string" ? body.staffId : "";
+  const storeId = typeof body?.storeId === "string" ? body.storeId : "";
+
+  if (!staffId || !storeId) return badRequest("削除するスタッフを指定してください。");
+
+  const staff = await prisma.appUser.findUnique({ where: { id: staffId } });
+  if (!staff || staff.storeId !== storeId || staff.role !== "STORE_ADMIN") {
+    return badRequest("削除対象のスタッフが見つかりません。");
+  }
+
+  await prisma.appUser.delete({ where: { id: staffId } });
+  return NextResponse.json({ ok: true });
 }

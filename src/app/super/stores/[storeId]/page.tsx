@@ -2,6 +2,7 @@ import Link from "next/link";
 import { GameCategory, GameStatus, UserRole } from "@prisma/client";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/app/components/AppShell";
+import { SuperStoreOperations } from "@/app/super/stores/[storeId]/SuperStoreOperations";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdmin } from "@/lib/session";
 
@@ -24,7 +25,10 @@ export default async function SuperStoreDetailPage({ params }: Params) {
     include: {
       tables: {
         orderBy: { tableNumber: "asc" },
-        include: { currentTournament: { select: { name: true } } },
+        include: {
+          currentTournament: { select: { name: true } },
+          _count: { select: { games: true, pointSnapshots: true } },
+        },
       },
       tournaments: {
         orderBy: [{ startsAt: "desc" }, { createdAt: "desc" }],
@@ -123,75 +127,26 @@ export default async function SuperStoreDetailPage({ params }: Params) {
         </div>
       </section>
 
-      <section className="panel">
-        <h2>卓一覧</h2>
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>卓番号</th>
-                <th>状態</th>
-                <th>通信</th>
-                <th>通常/大会</th>
-                <th>大会名</th>
-                <th>端末ID</th>
-                <th>最終通信</th>
-              </tr>
-            </thead>
-            <tbody>
-              {store.tables.map((table) => (
-                <tr key={table.id}>
-                  <td>{table.tableNumber}卓</td>
-                  <td>{table.status}</td>
-                  <td>{table.connectionStatus}</td>
-                  <td>{table.defaultCategory === GameCategory.TOURNAMENT ? "大会卓" : "通常卓"}</td>
-                  <td>{table.currentTournament?.name ?? "-"}</td>
-                  <td>{table.deviceId}</td>
-                  <td>{formatDateTime(table.lastSeenAt)}</td>
-                </tr>
-              ))}
-              {!store.tables.length ? (
-                <tr>
-                  <td colSpan={7} className="muted">
-                    卓はまだ登録されていません。
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="panel">
-        <h2>スタッフアカウント</h2>
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>名前</th>
-                <th>ログインID</th>
-                <th>作成日</th>
-              </tr>
-            </thead>
-            <tbody>
-              {staffUsers.map((staff) => (
-                <tr key={staff.id}>
-                  <td>{staff.name}</td>
-                  <td>{staff.email}</td>
-                  <td>{formatDateTime(staff.createdAt)}</td>
-                </tr>
-              ))}
-              {!staffUsers.length ? (
-                <tr>
-                  <td colSpan={3} className="muted">
-                    スタッフアカウントはまだありません。
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <SuperStoreOperations
+        storeId={store.id}
+        storeCode={store.storeCode}
+        initialStaff={staffUsers.map((staff) => ({
+          ...staff,
+          createdAt: staff.createdAt.toISOString(),
+        }))}
+        initialTables={store.tables.map((table) => ({
+          id: table.id,
+          tableNumber: table.tableNumber,
+          status: table.status,
+          connectionStatus: table.connectionStatus,
+          defaultCategory: table.defaultCategory,
+          currentTournamentName: table.currentTournament?.name ?? null,
+          deviceId: table.deviceId,
+          lastSeenAt: table.lastSeenAt?.toISOString() ?? null,
+          gameCount: table._count.games,
+          pointSnapshotCount: table._count.pointSnapshots,
+        }))}
+      />
 
       <section className="panel">
         <h2>大会一覧</h2>

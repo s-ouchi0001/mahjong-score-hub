@@ -17,7 +17,6 @@ type StoreSummary = {
 
 export function SuperAdminPanel({ stores }: { stores: StoreSummary[] }) {
   const [storeState, setStoreState] = useState(stores);
-  const [selectedStoreId, setSelectedStoreId] = useState(stores[0]?.id ?? "");
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -60,25 +59,7 @@ export function SuperAdminPanel({ stores }: { stores: StoreSummary[] }) {
           staffCount: 0,
         },
       ]);
-      setSelectedStoreId(payload.store.id);
     }
-  }
-
-  async function createStaff(formData: FormData) {
-    await postJson("/api/super/staff", {
-      storeId: String(formData.get("storeId") ?? ""),
-      loginId: String(formData.get("loginId") ?? ""),
-      name: String(formData.get("name") ?? ""),
-      password: String(formData.get("password") ?? ""),
-    });
-  }
-
-  async function createTable(formData: FormData) {
-    await postJson("/api/super/tables", {
-      storeId: String(formData.get("storeId") ?? ""),
-      tableNumber: Number(formData.get("tableNumber") ?? 0),
-      deviceId: String(formData.get("deviceId") ?? ""),
-    });
   }
 
   return (
@@ -133,68 +114,6 @@ export function SuperAdminPanel({ stores }: { stores: StoreSummary[] }) {
           <div className="field">
             <label htmlFor="super-store-code">店舗ID</label>
             <input id="super-store-code" name="storeCode" type="text" placeholder="例: CHUO" />
-          </div>
-          <button className="button" type="submit" disabled={isSaving}>
-            追加
-          </button>
-        </form>
-      </section>
-
-      <section className="panel">
-        <h2>雀荘スタッフを追加</h2>
-        <form className="form" action={createStaff}>
-          <div className="field">
-            <label htmlFor="super-staff-store">店舗</label>
-            <select id="super-staff-store" name="storeId" value={selectedStoreId} onChange={(event) => setSelectedStoreId(event.target.value)}>
-              {storeState.map((store) => (
-                <option key={store.id} value={store.id}>
-                  {store.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="player-grid">
-            <div className="field">
-              <label htmlFor="super-staff-login">ログインID</label>
-              <input id="super-staff-login" name="loginId" type="text" placeholder="例: STAFF01" />
-            </div>
-            <div className="field">
-              <label htmlFor="super-staff-name">スタッフ名</label>
-              <input id="super-staff-name" name="name" type="text" />
-            </div>
-            <div className="field">
-              <label htmlFor="super-staff-password">初期パスワード</label>
-              <input id="super-staff-password" name="password" type="text" />
-            </div>
-          </div>
-          <button className="button" type="submit" disabled={isSaving}>
-            作成
-          </button>
-        </form>
-      </section>
-
-      <section className="panel">
-        <h2>卓を追加</h2>
-        <form className="form" action={createTable}>
-          <div className="field">
-            <label htmlFor="super-table-store">店舗</label>
-            <select id="super-table-store" name="storeId" defaultValue={selectedStoreId}>
-              {storeState.map((store) => (
-                <option key={store.id} value={store.id}>
-                  {store.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="player-grid">
-            <div className="field">
-              <label htmlFor="super-table-number">卓番号</label>
-              <input id="super-table-number" name="tableNumber" type="number" min="1" />
-            </div>
-            <div className="field">
-              <label htmlFor="super-table-device">端末ID</label>
-              <input id="super-table-device" name="deviceId" type="text" placeholder="未入力なら自動" />
-            </div>
           </div>
           <button className="button" type="submit" disabled={isSaving}>
             追加
