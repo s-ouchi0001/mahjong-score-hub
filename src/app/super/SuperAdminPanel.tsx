@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 type StoreSummary = {
@@ -96,6 +97,7 @@ export function SuperAdminPanel({ stores }: { stores: StoreSummary[] }) {
                 <th>半荘</th>
                 <th>大会</th>
                 <th>スタッフ</th>
+                <th>詳細</th>
               </tr>
             </thead>
             <tbody>
@@ -109,6 +111,11 @@ export function SuperAdminPanel({ stores }: { stores: StoreSummary[] }) {
                   <td>{store.finishedGameCount}</td>
                   <td>{store.tournamentGameCount}</td>
                   <td>{store.staffCount}</td>
+                  <td>
+                    <Link className="button secondary compact" href={`/super/stores/${store.id}`}>
+                      開く
+                    </Link>
+                  </td>
                 </tr>
               ))}
             </tbody>
