@@ -102,7 +102,7 @@ export function PlayerStats({
       )}
 
       <section className="panel">
-        <div className="score-entry-heading">
+        <div className="score-entry-heading player-stats-toolbar">
           <h2>プレイヤー成績 <span className="heading-subname">{payload?.player.name ?? ""} {loading ? "集計中" : ""}</span></h2>
           <div className="stats-select-row">
             <div className="field">

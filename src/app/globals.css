@@ -920,6 +920,24 @@ textarea {
   grid-template-columns: minmax(120px, 180px) minmax(180px, 260px);
 }
 
+.player-stats-toolbar {
+  align-items: center;
+  gap: 18px;
+}
+
+.player-stats-toolbar h2 {
+  margin: 0;
+}
+
+.player-stats-toolbar .field {
+  gap: 3px;
+}
+
+.player-stats-toolbar select {
+  min-height: 38px;
+  padding-block: 6px;
+}
+
 .qr-card {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -1132,6 +1150,11 @@ textarea {
     display: grid;
   }
 
+  .player-stats-toolbar {
+    align-items: start;
+    grid-template-columns: 1fr;
+  }
+
   .list-header {
     align-items: stretch;
     display: grid;
@@ -1142,7 +1165,7 @@ textarea {
   }
 
   .stats-select-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .player-rating-overview {
