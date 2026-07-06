@@ -899,6 +899,27 @@ textarea {
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
+.qr-select-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.qr-select-item {
+  background: #f7faf8;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 12px;
+}
+
+.stats-select-row {
+  align-items: end;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(120px, 180px) minmax(180px, 260px);
+}
+
 .qr-card {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -1117,6 +1138,10 @@ textarea {
   }
 
   .qr-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-select-row {
     grid-template-columns: 1fr;
   }
 

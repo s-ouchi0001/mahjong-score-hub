@@ -37,6 +37,7 @@ export async function GET(request: NextRequest, { params }: Params) {
   }
 
   const mode = resolveMode(request.nextUrl.searchParams.get("mode"));
+  const tournamentId = request.nextUrl.searchParams.get("tournamentId");
   const records = await prisma.gamePlayer.findMany({
     where: {
       playerId,
@@ -56,7 +57,12 @@ export async function GET(request: NextRequest, { params }: Params) {
     },
   });
 
-  const targetRecords = mode === "recent" ? records.slice(0, 10) : mode === "tournament" ? records.filter((record) => record.game.category === GameCategory.TOURNAMENT) : records;
+  const targetRecords =
+    mode === "recent"
+      ? records.slice(0, 10)
+      : mode === "tournament"
+        ? records.filter((record) => record.game.category === GameCategory.TOURNAMENT && (!tournamentId || record.game.tournamentId === tournamentId))
+        : records;
   const count = targetRecords.length;
   const totalRank = targetRecords.reduce((sum, record) => sum + (record.rank ?? 0), 0);
   const totalScore = targetRecords.reduce((sum, record) => sum + (record.score ?? 0), 0);

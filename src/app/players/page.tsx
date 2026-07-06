@@ -19,6 +19,11 @@ export default async function PlayersPage() {
           },
           orderBy: { name: "asc" },
         });
+  const tournaments = await prisma.tournament.findMany({
+    where: { storeId: user.storeId },
+    orderBy: [{ startsAt: "desc" }, { createdAt: "desc" }],
+    select: { id: true, name: true },
+  });
 
   return (
     <AppShell user={user}>
@@ -31,6 +36,7 @@ export default async function PlayersPage() {
       <PlayerStats
         lockedPlayerId={user.role === "PLAYER" ? user.playerId : null}
         players={players.map((player) => ({ id: player.id, name: player.name }))}
+        tournaments={tournaments}
       />
     </AppShell>
   );

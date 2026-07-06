@@ -9,6 +9,11 @@ type PlayerOption = {
   name: string;
 };
 
+type TournamentOption = {
+  id: string;
+  name: string;
+};
+
 type StatsMode = "total" | "recent" | "tournament";
 
 type StatsPayload = {
@@ -38,25 +43,30 @@ type StatsPayload = {
 export function PlayerStats({
   players,
   lockedPlayerId,
+  tournaments,
 }: {
   players: PlayerOption[];
   lockedPlayerId: string | null;
+  tournaments: TournamentOption[];
 }) {
   const searchParams = useSearchParams();
   const initialPlayerId = searchParams.get("playerId");
   const [playerId, setPlayerId] = useState(lockedPlayerId ?? initialPlayerId ?? players[0]?.id ?? "");
   const [mode, setMode] = useState<StatsMode>("total");
+  const [tournamentId, setTournamentId] = useState(tournaments[0]?.id ?? "");
   const [payload, setPayload] = useState<StatsPayload | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!playerId) return;
     setLoading(true);
-    fetch(`/api/players/${playerId}/stats?mode=${mode}`)
+    const params = new URLSearchParams({ mode });
+    if (mode === "tournament" && tournamentId) params.set("tournamentId", tournamentId);
+    fetch(`/api/players/${playerId}/stats?${params.toString()}`)
       .then((response) => response.json())
       .then(setPayload)
       .finally(() => setLoading(false));
-  }, [playerId, mode]);
+  }, [playerId, mode, tournamentId]);
 
   return (
     <div className="grid">
@@ -94,16 +104,28 @@ export function PlayerStats({
       <section className="panel">
         <div className="score-entry-heading">
           <h2>プレイヤー成績 <span className="heading-subname">{payload?.player.name ?? ""} {loading ? "集計中" : ""}</span></h2>
-          <div className="segment-control compact-segment" role="group" aria-label="成績表示">
-            <button className={mode === "total" ? "active" : ""} type="button" onClick={() => setMode("total")}>
-              通算
-            </button>
-            <button className={mode === "recent" ? "active" : ""} type="button" onClick={() => setMode("recent")}>
-              直近
-            </button>
-            <button className={mode === "tournament" ? "active" : ""} type="button" onClick={() => setMode("tournament")}>
-              大会
-            </button>
+          <div className="stats-select-row">
+            <div className="field">
+              <label htmlFor="stats-mode">表示</label>
+              <select id="stats-mode" value={mode} onChange={(event) => setMode(event.target.value as StatsMode)}>
+                <option value="total">通算</option>
+                <option value="recent">直近</option>
+                <option value="tournament">大会</option>
+              </select>
+            </div>
+            {mode === "tournament" ? (
+              <div className="field">
+                <label htmlFor="stats-tournament">大会</label>
+                <select id="stats-tournament" value={tournamentId} onChange={(event) => setTournamentId(event.target.value)}>
+                  {tournaments.map((tournament) => (
+                    <option key={tournament.id} value={tournament.id}>
+                      {tournament.name}
+                    </option>
+                  ))}
+                  {!tournaments.length ? <option value="">大会未登録</option> : null}
+                </select>
+              </div>
+            ) : null}
           </div>
         </div>
         <div className="metric-grid">
