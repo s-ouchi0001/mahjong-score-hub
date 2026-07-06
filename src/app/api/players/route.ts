@@ -29,14 +29,17 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json().catch(() => null);
   const name = typeof body?.name === "string" ? body.name.trim() : "";
-  const managementNumber = typeof body?.managementNumber === "string" ? body.managementNumber.trim() : "";
   const isCheckedIn = Boolean(body?.isCheckedIn);
 
   if (!name) return badRequest("名前を入力してください。");
-  if (!managementNumber) return badRequest("ユーザIDを入力してください。");
 
   try {
     const created = await prisma.$transaction(async (tx) => {
+      const [sequence] = await tx.$queryRaw<Array<{ next_number: bigint }>>`
+        SELECT nextval('"PlayerManagementNumberSeq"') AS next_number
+      `;
+      const managementNumber = String(sequence.next_number);
+
       const player = await tx.player.create({
         data: {
           storeId: user.storeId,

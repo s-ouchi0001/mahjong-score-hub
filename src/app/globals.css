@@ -804,6 +804,16 @@ textarea {
   vertical-align: bottom;
 }
 
+.fixed-id {
+  background: #f4f7f5;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  display: inline-flex;
+  font-weight: 800;
+  min-width: 78px;
+  padding: 6px 10px;
+}
+
 .point-unit-input {
   display: grid;
   gap: 8px;

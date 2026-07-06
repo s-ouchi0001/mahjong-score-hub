@@ -86,7 +86,7 @@ model Player {
   id               String       @id @default(cuid())
   storeId          String
   name             String
-  managementNumber String?
+  managementNumber String?      @unique
   isCheckedIn      Boolean      @default(false)
   checkedInAt      DateTime?
   checkedOutAt     DateTime?
@@ -97,7 +97,6 @@ model Player {
   users            AppUser[]
 
   @@unique([storeId, name])
-  @@unique([storeId, managementNumber])
   @@index([storeId])
   @@index([storeId, isCheckedIn])
 }

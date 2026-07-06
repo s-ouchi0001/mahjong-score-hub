@@ -56,6 +56,8 @@ async function main() {
     },
   ];
 
+  let nextDemoManagementNumber = 10000;
+
   for (const storeConfig of stores) {
     const store = await prisma.store.upsert({
       where: { id: storeConfig.id },
@@ -124,7 +126,8 @@ async function main() {
     const seededPlayers: Player[] = [];
 
     for (const [index, name] of storeConfig.players.entries()) {
-      const managementNumber = `${store.id === "store-demo" ? "A" : "B"}${String(index + 1).padStart(3, "0")}`;
+      const managementNumber = String(nextDemoManagementNumber);
+      nextDemoManagementNumber += 1;
       const player = await prisma.player.upsert({
         where: {
           storeId_name: {

@@ -85,12 +85,7 @@ export async function POST(request: NextRequest) {
 
       const managementNumber = `${staffNumberPrefix}${tableId}_${index + 1}`;
       const staffPlayer = await prisma.player.upsert({
-        where: {
-          storeId_managementNumber: {
-            storeId: table.storeId,
-            managementNumber,
-          },
-        },
+        where: { managementNumber },
         update: { name: "スタッフ", isCheckedIn: false },
         create: {
           storeId: table.storeId,

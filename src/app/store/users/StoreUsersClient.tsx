@@ -26,7 +26,6 @@ export function StoreUsersClient({
   const [qrPlayer, setQrPlayer] = useState<ManagedPlayer | null>(null);
   const [newPlayer, setNewPlayer] = useState({
     name: "",
-    managementNumber: "",
     isCheckedIn: true,
   });
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -63,7 +62,7 @@ export function StoreUsersClient({
           checkedOutAt: payload.player.checkedOutAt,
         },
       ]);
-      setNewPlayer({ name: "", managementNumber: "", isCheckedIn: true });
+      setNewPlayer({ name: "", isCheckedIn: true });
       setMessage({ type: "ok", text: "ユーザを追加しました。" });
     } catch (error) {
       setMessage({ type: "error", text: error instanceof Error ? error.message : "追加に失敗しました。" });
@@ -149,8 +148,11 @@ export function StoreUsersClient({
               <input id="new-name" value={newPlayer.name} onChange={(event) => setNewPlayer((current) => ({ ...current, name: event.target.value }))} />
             </div>
             <div className="field">
-              <label htmlFor="new-number">ユーザID</label>
-              <input id="new-number" value={newPlayer.managementNumber} onChange={(event) => setNewPlayer((current) => ({ ...current, managementNumber: event.target.value }))} />
+              <label>ユーザID</label>
+              <div className="readonly-setting">
+                <strong>自動採番</strong>
+                <span>10000から店舗横断で連番</span>
+              </div>
             </div>
             <div className="field">
               <label>初期パスワード</label>
@@ -216,14 +218,7 @@ export function StoreUsersClient({
                   </span>
                 </td>
                 <td>
-                  <input
-                    aria-label={`${player.name} ユーザID`}
-                    className="compact-input"
-                    value={player.managementNumber ?? ""}
-                    onBlur={(event) => updatePlayer(player.id, { managementNumber: event.target.value })}
-                    onChange={(event) => updateLocalPlayer(player.id, { managementNumber: event.target.value })}
-                    placeholder="ログインID"
-                  />
+                  <span className="fixed-id">{player.managementNumber ?? "-"}</span>
                 </td>
                 <td>
                   <input
