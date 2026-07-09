@@ -909,6 +909,11 @@ textarea {
   width: min(100%, 760px);
 }
 
+.password-modal {
+  max-width: 520px;
+  width: min(100%, 520px);
+}
+
 .qr-layout {
   align-items: start;
   display: grid;

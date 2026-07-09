@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
           isCheckedIn,
           checkedInAt: isCheckedIn ? new Date() : null,
           checkedOutAt: isCheckedIn ? null : new Date(),
+          visitCount: isCheckedIn ? 1 : 0,
         },
       });
 

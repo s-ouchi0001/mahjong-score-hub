@@ -26,6 +26,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     isCheckedIn?: boolean;
     checkedInAt?: Date | null;
     checkedOutAt?: Date | null;
+    visitCount?: { increment: number };
   } = {};
   const password = typeof body?.password === "string" ? body.password : "";
 
@@ -48,6 +49,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     data.isCheckedIn = body.isCheckedIn;
     data.checkedInAt = body.isCheckedIn ? new Date() : player.checkedInAt;
     data.checkedOutAt = body.isCheckedIn ? null : new Date();
+    if (body.isCheckedIn && !player.isCheckedIn) {
+      data.visitCount = { increment: 1 };
+    }
   }
 
   if ("password" in body && password.trim().length < 4) {
@@ -66,6 +70,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
           isCheckedIn: true,
           checkedInAt: true,
           checkedOutAt: true,
+          visitCount: true,
         },
       });
 

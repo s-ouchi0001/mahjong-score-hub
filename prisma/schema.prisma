@@ -90,6 +90,7 @@ model Player {
   isCheckedIn      Boolean      @default(false)
   checkedInAt      DateTime?
   checkedOutAt     DateTime?
+  visitCount       Int          @default(0)
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   store            Store        @relation(fields: [storeId], references: [id])

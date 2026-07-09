@@ -26,6 +26,7 @@ export default async function StoreUsersPage() {
       isCheckedIn: true,
       checkedInAt: true,
       checkedOutAt: true,
+      visitCount: true,
     },
   });
 

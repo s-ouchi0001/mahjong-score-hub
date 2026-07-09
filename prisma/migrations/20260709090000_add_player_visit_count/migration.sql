@@ -1,0 +1,7 @@
+ALTER TABLE "Player" ADD COLUMN "visitCount" INTEGER NOT NULL DEFAULT 0;
+
+UPDATE "Player"
+SET "visitCount" = CASE
+  WHEN "checkedInAt" IS NOT NULL THEN 1
+  ELSE 0
+END;

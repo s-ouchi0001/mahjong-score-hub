@@ -9,6 +9,7 @@ type ManagedPlayer = {
   isCheckedIn: boolean;
   checkedInAt: string | null;
   checkedOutAt: string | null;
+  visitCount: number;
 };
 
 export function StoreUsersClient({
@@ -21,9 +22,10 @@ export function StoreUsersClient({
   loginBaseUrl: string;
 }) {
   const [playerState, setPlayerState] = useState(players);
-  const [passwordInputs, setPasswordInputs] = useState<Record<string, string>>({});
   const [searchText, setSearchText] = useState("");
   const [qrPlayer, setQrPlayer] = useState<ManagedPlayer | null>(null);
+  const [passwordPlayer, setPasswordPlayer] = useState<ManagedPlayer | null>(null);
+  const [passwordValue, setPasswordValue] = useState("");
   const [newPlayer, setNewPlayer] = useState({
     name: "",
     isCheckedIn: true,
@@ -60,6 +62,7 @@ export function StoreUsersClient({
           isCheckedIn: payload.player.isCheckedIn,
           checkedInAt: payload.player.checkedInAt,
           checkedOutAt: payload.player.checkedOutAt,
+          visitCount: payload.player.visitCount,
         },
       ]);
       setNewPlayer({ name: "", isCheckedIn: true });
@@ -92,28 +95,33 @@ export function StoreUsersClient({
                 isCheckedIn: payload.player.isCheckedIn,
                 checkedInAt: payload.player.checkedInAt,
                 checkedOutAt: payload.player.checkedOutAt,
+                visitCount: payload.player.visitCount,
               }
             : player,
         ),
       );
       setMessage({ type: "ok", text: "更新しました。" });
+      return true;
     } catch (error) {
       setMessage({ type: "error", text: error instanceof Error ? error.message : "更新に失敗しました。" });
+      return false;
     } finally {
       setSavingId(null);
     }
   }
 
-  async function changePassword(player: ManagedPlayer) {
-    const password = passwordInputs[player.id]?.trim() ?? "";
+  async function changePassword() {
+    if (!passwordPlayer) return;
+    const password = passwordValue.trim();
     if (!password) {
       setMessage({ type: "error", text: "新しいパスワードを入力してください。" });
       return;
     }
-    if (!window.confirm(`${player.name}さんのパスワードを変更します。よろしいですか？`)) return;
 
-    await updatePlayer(player.id, { password });
-    setPasswordInputs((current) => ({ ...current, [player.id]: "" }));
+    const ok = await updatePlayer(passwordPlayer.id, { password });
+    if (!ok) return;
+    setPasswordValue("");
+    setPasswordPlayer(null);
   }
 
   function updateLocalPlayer(playerId: string, body: Partial<ManagedPlayer>) {
@@ -200,13 +208,14 @@ export function StoreUsersClient({
           <thead>
             <tr>
               <th>状態</th>
+              <th>操作</th>
               <th>ユーザID</th>
               <th>プレイヤー</th>
-              <th>パスワード</th>
-              <th>入場時刻</th>
-              <th>退場時刻</th>
+              <th>入場時間</th>
+              <th>退場時間</th>
+              <th>累積来店回数</th>
               <th>QR</th>
-              <th>操作</th>
+              <th>パスワード変更</th>
             </tr>
           </thead>
           <tbody>
@@ -216,6 +225,16 @@ export function StoreUsersClient({
                   <span className={`badge ${player.isCheckedIn ? "ok" : "idle"}`}>
                     {player.isCheckedIn ? "入場中" : "退場中"}
                   </span>
+                </td>
+                <td>
+                  <button
+                    className={player.isCheckedIn ? "button secondary compact" : "button compact"}
+                    type="button"
+                    disabled={savingId === player.id}
+                    onClick={() => updatePlayer(player.id, { isCheckedIn: !player.isCheckedIn })}
+                  >
+                    {player.isCheckedIn ? "退場" : "入場"}
+                  </button>
                 </td>
                 <td>
                   <span className="fixed-id">{player.managementNumber ?? "-"}</span>
@@ -229,30 +248,9 @@ export function StoreUsersClient({
                     onChange={(event) => updateLocalPlayer(player.id, { name: event.target.value })}
                   />
                 </td>
-                <td>
-                  <div className="password-cell">
-                    <span className="muted">表示不可</span>
-                    <input
-                      aria-label={`${player.name} 新しいパスワード`}
-                      className="compact-input password-input"
-                      type="password"
-                      value={passwordInputs[player.id] ?? ""}
-                      onChange={(event) => setPasswordInputs((current) => ({ ...current, [player.id]: event.target.value }))}
-                      placeholder="新パスワード"
-                      autoComplete="new-password"
-                    />
-                    <button
-                      className="button secondary compact"
-                      type="button"
-                      disabled={savingId === player.id}
-                      onClick={() => changePassword(player)}
-                    >
-                      変更
-                    </button>
-                  </div>
-                </td>
                 <td>{formatDate(player.checkedInAt)}</td>
                 <td>{formatDate(player.checkedOutAt)}</td>
+                <td>{player.visitCount.toLocaleString()}回</td>
                 <td>
                   <button
                     className="button secondary compact"
@@ -267,19 +265,23 @@ export function StoreUsersClient({
                 </td>
                 <td>
                   <button
-                    className={player.isCheckedIn ? "button secondary compact" : "button compact"}
+                    className="button secondary compact"
                     type="button"
                     disabled={savingId === player.id}
-                    onClick={() => updatePlayer(player.id, { isCheckedIn: !player.isCheckedIn })}
+                    onClick={() => {
+                      setPasswordPlayer(player);
+                      setPasswordValue("");
+                      setMessage(null);
+                    }}
                   >
-                    {player.isCheckedIn ? "退場" : "入場"}
+                    変更
                   </button>
                 </td>
               </tr>
             ))}
             {!filteredPlayers.length ? (
               <tr>
-                <td colSpan={8}>
+                <td colSpan={9}>
                   <span className="muted">該当するユーザはいません。</span>
                 </td>
               </tr>
@@ -318,6 +320,39 @@ export function StoreUsersClient({
                   <label>URL</label>
                   <textarea readOnly rows={3} value={loginUrl(qrPlayer)} />
                 </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      ) : null}
+      {passwordPlayer ? (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label={`${passwordPlayer.name} パスワード変更`}>
+          <section className="modal-panel password-modal">
+            <div className="list-header">
+              <div>
+                <h2>{passwordPlayer.name} パスワード変更</h2>
+                <p className="muted">変更後、次回ログイン時に本人が再設定します。</p>
+              </div>
+              <button className="button secondary compact" type="button" onClick={() => setPasswordPlayer(null)}>
+                閉じる
+              </button>
+            </div>
+            <div className="form">
+              <div className="field">
+                <label htmlFor="password-reset-value">新しい仮パスワード</label>
+                <input
+                  id="password-reset-value"
+                  type="password"
+                  value={passwordValue}
+                  onChange={(event) => setPasswordValue(event.target.value)}
+                  autoComplete="new-password"
+                  autoFocus
+                />
+              </div>
+              <div className="actions">
+                <button className="button" type="button" disabled={savingId === passwordPlayer.id} onClick={changePassword}>
+                  パスワードを変更
+                </button>
               </div>
             </div>
           </section>
