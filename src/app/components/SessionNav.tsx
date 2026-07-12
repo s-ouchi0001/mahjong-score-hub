@@ -83,7 +83,7 @@ export function SessionNav({ session: initialSession }: { session: Session }) {
         </div>
       ) : null}
       <nav className="nav" aria-label="主要画面">
-        <Link href="/">本部</Link>
+        <Link href="/dashboard">本部</Link>
         <Link href="/store/users">ユーザ管理</Link>
         <Link href="/store/qr-print">QR印刷</Link>
         <Link href="/store/players">成績一覧</Link>
