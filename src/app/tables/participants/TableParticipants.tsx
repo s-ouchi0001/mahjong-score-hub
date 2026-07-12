@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 type TableOption = {
   id: string;
   tableNumber: number;
+  deviceId: string;
   status: string;
   defaultCategory: "REGULAR" | "TOURNAMENT";
   currentTournamentId: string | null;
@@ -49,6 +50,7 @@ export function TableParticipants({
   const selectedTable = tableState.find((table) => table.id === selectedTableId) ?? tableState[0];
   const [tableCategory, setTableCategory] = useState<"REGULAR" | "TOURNAMENT">(selectedTable?.defaultCategory ?? "REGULAR");
   const [tournamentId, setTournamentId] = useState(selectedTable?.currentTournamentId ?? "");
+  const [deviceId, setDeviceId] = useState(selectedTable?.deviceId ?? "");
   const [selectedSeat, setSelectedSeat] = useState(0);
   const [playerIds, setPlayerIds] = useState<string[]>(
     selectedTable?.activeGame?.players.map((player) => player.id) ?? emptySeats,
@@ -108,6 +110,7 @@ export function TableParticipants({
     setSelectedTableId(tableId);
     setTableCategory(table?.defaultCategory ?? "REGULAR");
     setTournamentId(table?.currentTournamentId ?? "");
+    setDeviceId(table?.deviceId ?? "");
     setPlayerIds(table?.activeGame?.players.map((player) => player.id) ?? emptySeats);
     setSelectedSeat(0);
     setMessage(null);
@@ -195,6 +198,40 @@ export function TableParticipants({
       setMessage({ type: "ok", text: `${selectedTable.tableNumber}卓の設定を保存しました。` });
     } catch (error) {
       setMessage({ type: "error", text: error instanceof Error ? error.message : "卓設定の保存に失敗しました。" });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function saveDeviceId() {
+    if (!selectedTable) return;
+    setIsSaving(true);
+    setMessage(null);
+    try {
+      const response = await fetch(`/api/tables/${selectedTable.id}/settings`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: tableCategory, tournamentId: tableCategory === "TOURNAMENT" ? tournamentId : null, deviceId }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "端末IDの保存に失敗しました。");
+      setTableState((current) =>
+        current.map((table) =>
+          table.id === selectedTable.id
+            ? {
+                ...table,
+                deviceId: payload.table.deviceId,
+                defaultCategory: payload.table.defaultCategory,
+                currentTournamentId: payload.table.currentTournament?.id ?? null,
+                currentTournamentName: payload.table.currentTournament?.name ?? null,
+              }
+            : table,
+        ),
+      );
+      setDeviceId(payload.table.deviceId);
+      setMessage({ type: "ok", text: `${selectedTable.tableNumber}卓のカメラ端末IDを保存しました。` });
+    } catch (error) {
+      setMessage({ type: "error", text: error instanceof Error ? error.message : "端末IDの保存に失敗しました。" });
     } finally {
       setIsSaving(false);
     }
@@ -303,6 +340,23 @@ export function TableParticipants({
               )}
             </div>
           ) : null}
+
+          <div className="field">
+            <label htmlFor="device-id">カメラ端末ID</label>
+            <div className="inline-form-row">
+              <input
+                id="device-id"
+                type="text"
+                value={deviceId}
+                onChange={(event) => setDeviceId(event.target.value)}
+                placeholder={`table-${selectedTable?.tableNumber ?? 1}`}
+              />
+              <button className="button secondary compact" type="button" onClick={saveDeviceId} disabled={isSaving || !deviceId.trim()}>
+                保存
+              </button>
+            </div>
+            <small className="muted">PC認識アプリの端末IDと同じ値にします。このIDでWeb側の受信先卓が決まります。</small>
+          </div>
 
           <div className="seat-grid">
             {[0, 1, 2, 3].map((index) => (

@@ -15,6 +15,7 @@ export default async function TableParticipantsPage() {
       select: {
         id: true,
         tableNumber: true,
+        deviceId: true,
         status: true,
         defaultCategory: true,
         currentTournamentId: true,
@@ -60,6 +61,7 @@ export default async function TableParticipantsPage() {
         tables={tables.map((table) => ({
           id: table.id,
           tableNumber: table.tableNumber,
+          deviceId: table.deviceId,
           status: table.status,
           defaultCategory: table.defaultCategory,
           currentTournamentId: table.currentTournamentId,

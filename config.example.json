@@ -1,0 +1,18 @@
+{
+  "camera": 0,
+  "baseUrl": "http://127.0.0.1:3000",
+  "deviceId": "mock-table-1",
+  "apiKey": "",
+  "captureIntervalMs": 1000,
+  "sendIntervalMs": 3000,
+  "stableFrameCount": 3,
+  "saveImageDir": "pc-score-recognizer/captures/table-1",
+  "showPreview": true,
+  "recognitionMode": "red_led",
+  "regions": [
+    { "seat": 1, "centerX": 50, "centerY": 4, "width": 28, "height": 8, "rotate": 180 },
+    { "seat": 2, "centerX": 96, "centerY": 50, "width": 8, "height": 28, "rotate": 270 },
+    { "seat": 3, "centerX": 50, "centerY": 96, "width": 28, "height": 8, "rotate": 0 },
+    { "seat": 4, "centerX": 4, "centerY": 50, "width": 8, "height": 28, "rotate": 90 }
+  ]
+}

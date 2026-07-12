@@ -15,7 +15,9 @@
     "db:reset": "prisma db push --force-reset && npm run db:seed",
     "mock:gateway": "tsx scripts/mockBluetoothGateway.ts",
     "mock:android": "tsx scripts/mockAndroidTablet.ts",
-    "mock:ocr": "tsx scripts/mockImageRecognitionResult.ts"
+    "mock:ocr": "tsx scripts/mockImageRecognitionResult.ts",
+    "pc:recognizer": "python3 pc-score-recognizer/score_recognizer.py --config pc-score-recognizer/config.local.json",
+    "pc:setup": "python3 pc-score-recognizer/setup_config.py"
   },
   "dependencies": {
     "@prisma/client": "^6.10.1",

@@ -17,6 +17,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   const body = await request.json().catch(() => null);
   const category = body?.category === GameCategory.TOURNAMENT ? GameCategory.TOURNAMENT : GameCategory.REGULAR;
   const tournamentId = typeof body?.tournamentId === "string" && body.tournamentId ? body.tournamentId : null;
+  const deviceId = typeof body?.deviceId === "string" ? body.deviceId.trim() : undefined;
 
   const table = await prisma.mahjongTable.findUnique({ where: { id: tableId } });
   if (!table) return notFound("卓が見つかりません。");
@@ -30,14 +31,24 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     }
   }
 
+  if (deviceId !== undefined) {
+    if (!deviceId) return badRequest("カメラ端末IDを入力してください。");
+    const duplicate = await prisma.mahjongTable.findUnique({ where: { deviceId } });
+    if (duplicate && duplicate.id !== tableId) {
+      return badRequest("このカメラ端末IDは別の卓で使われています。");
+    }
+  }
+
   const updated = await prisma.mahjongTable.update({
     where: { id: tableId },
     data: {
       defaultCategory: category,
       currentTournamentId: category === GameCategory.TOURNAMENT ? tournamentId : null,
+      ...(deviceId !== undefined ? { deviceId } : {}),
     },
     select: {
       id: true,
+      deviceId: true,
       defaultCategory: true,
       currentTournament: { select: { id: true, name: true } },
     },

@@ -6,3 +6,6 @@ dist
 *.db
 *.db-journal
 prisma/dev.db
+.venv-score/
+pc-score-recognizer/config.local.json
+pc-score-recognizer/captures/

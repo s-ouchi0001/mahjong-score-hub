@@ -479,6 +479,13 @@ textarea {
   width: auto;
 }
 
+.inline-form-row {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
 .button {
   align-items: center;
   background: var(--accent);
@@ -1476,6 +1483,11 @@ textarea {
   }
 
   .simple-score-row {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .inline-form-row {
     align-items: stretch;
     grid-template-columns: 1fr;
   }
