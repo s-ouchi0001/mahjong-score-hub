@@ -42,8 +42,8 @@ textarea {
 
 .admin-shell {
   display: grid;
-  grid-template-columns: 248px minmax(0, 1fr);
-  grid-template-rows: auto 1fr;
+  grid-template-columns: clamp(168px, 10vw, 190px) minmax(0, 1fr);
+  min-height: 100vh;
 }
 
 .topbar {
@@ -60,15 +60,22 @@ textarea {
 }
 
 .admin-shell .topbar {
-  grid-column: 1 / -1;
+  align-content: start;
+  align-items: stretch;
+  display: grid;
+  gap: 14px;
+  grid-column: 1;
   grid-row: 1;
-  min-height: 70px;
-  padding: 12px clamp(16px, 3vw, 32px);
+  justify-content: stretch;
+  min-height: 100vh;
+  padding: 14px 10px;
   position: sticky;
 }
 
 .admin-shell .brand {
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.45;
+  white-space: normal;
 }
 
 .brand {
@@ -86,11 +93,12 @@ textarea {
 }
 
 .admin-layout-nav {
-  align-items: center;
-  display: flex;
-  gap: 14px;
-  justify-content: flex-end;
-  width: auto;
+  align-content: start;
+  align-items: stretch;
+  display: grid;
+  gap: 12px;
+  justify-content: stretch;
+  width: 100%;
 }
 
 .session-badge {
@@ -124,6 +132,17 @@ textarea {
   white-space: nowrap;
 }
 
+.admin-shell .session-badge {
+  max-width: none;
+  min-width: 0;
+  padding: 8px;
+  width: 100%;
+}
+
+.admin-shell .session-badge strong {
+  font-size: 13px;
+}
+
 .nav {
   display: flex;
   flex-wrap: wrap;
@@ -143,21 +162,20 @@ textarea {
 
 .admin-side-nav {
   display: grid;
-  gap: 8px;
-  grid-column: 1;
-  grid-row: 2;
+  gap: 7px;
   justify-content: stretch;
-  padding: 18px 14px;
-  position: sticky;
-  top: 70px;
-  z-index: 10;
+  padding: 0;
+  position: static;
 }
 
 .admin-side-nav a,
 .admin-side-nav .nav-button {
   background: #12322e;
   border-color: rgba(255, 255, 255, 0.18);
+  font-size: 13px;
   justify-content: flex-start;
+  min-height: 36px;
+  padding: 8px 10px;
   text-align: left;
   width: 100%;
 }
@@ -178,9 +196,9 @@ textarea {
 
 .admin-shell .main {
   grid-column: 2;
-  grid-row: 2;
+  grid-row: 1;
   min-width: 0;
-  padding-left: 18px;
+  padding: 24px clamp(18px, 3vw, 42px) 42px;
 }
 
 .public-page {
