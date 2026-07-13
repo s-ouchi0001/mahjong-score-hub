@@ -60,11 +60,10 @@ textarea {
 }
 
 .admin-shell .topbar {
-  align-items: stretch;
-  grid-column: 1;
-  grid-row: 1 / span 2;
-  min-height: 100vh;
-  padding: 22px 16px;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  min-height: 70px;
+  padding: 12px clamp(16px, 3vw, 32px);
   position: sticky;
 }
 
@@ -87,12 +86,11 @@ textarea {
 }
 
 .admin-layout-nav {
-  align-content: start;
-  align-items: stretch;
-  display: grid;
+  align-items: center;
+  display: flex;
   gap: 14px;
-  justify-content: stretch;
-  width: 100%;
+  justify-content: flex-end;
+  width: auto;
 }
 
 .session-badge {
@@ -146,11 +144,18 @@ textarea {
 .admin-side-nav {
   display: grid;
   gap: 8px;
+  grid-column: 1;
+  grid-row: 2;
   justify-content: stretch;
+  padding: 18px 14px;
+  position: sticky;
+  top: 70px;
+  z-index: 10;
 }
 
 .admin-side-nav a,
 .admin-side-nav .nav-button {
+  background: #12322e;
   border-color: rgba(255, 255, 255, 0.18);
   justify-content: flex-start;
   text-align: left;
@@ -158,8 +163,8 @@ textarea {
 }
 
 .admin-side-nav a.active {
-  background: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.38);
+  background: var(--accent);
+  border-color: var(--accent);
   font-weight: 800;
 }
 
@@ -173,7 +178,9 @@ textarea {
 
 .admin-shell .main {
   grid-column: 2;
-  grid-row: 1 / span 2;
+  grid-row: 2;
+  min-width: 0;
+  padding-left: 18px;
 }
 
 .public-page {
@@ -1520,6 +1527,7 @@ textarea {
   .admin-shell .main {
     grid-column: auto;
     grid-row: auto;
+    padding-left: 12px;
   }
 
   .topbar-actions {
@@ -1541,7 +1549,9 @@ textarea {
   }
 
   .admin-layout-nav {
+    display: grid;
     gap: 8px;
+    width: 100%;
   }
 
   .admin-side-nav {

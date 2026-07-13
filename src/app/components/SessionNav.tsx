@@ -100,7 +100,7 @@ export function SessionNav({ session: initialSession }: { session: Session }) {
     const currentPath = adminLinks.find((link) => pathname === link.href || pathname.startsWith(`${link.href}/`))?.href ?? "/dashboard";
     return (
       <div className="topbar-actions admin-layout-nav">
-        <div className="session-badge" aria-label="ログイン中管理者">
+        <div className="session-badge admin-session-badge" aria-label="ログイン中管理者">
           <span>管理者</span>
           <strong>{session.name}</strong>
           <small>{session.storeName}</small>

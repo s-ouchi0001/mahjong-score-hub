@@ -22,7 +22,7 @@ export async function AppShell({
   return (
     <div className={isStoreAdmin ? "shell admin-shell" : "shell"}>
       <header className="topbar">
-        <Link className="brand" href="/">
+        <Link className="brand" href={isStoreAdmin ? "/dashboard" : "/"}>
           雀荘 成績管理クラウド
         </Link>
         <SessionNav
