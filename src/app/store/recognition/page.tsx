@@ -85,24 +85,28 @@ export default async function StoreRecognitionPage() {
       table: { select: { tableNumber: true } },
     },
   });
+  const onlineCount = tables.filter((table) => table.connectionStatus === "ONLINE").length;
 
   return (
     <AppShell user={user}>
-      <section className="page-title">
+      <section className="page-title monitor-title">
         <div>
-          <h1>カメラ認識確認</h1>
-          <p>ミニPCやMacから送られた点数、認識状態、最後の確認画像を見ます。</p>
+          <h1>カメラ監視モニター</h1>
+          <p>各卓の認識画像、点数、通信状態を監視します。</p>
         </div>
-        <AutoRefresh />
+        <div className="monitor-status-strip">
+          <span>ONLINE {onlineCount}/{tables.length}</span>
+          <AutoRefresh />
+        </div>
       </section>
 
-      <section className="recognition-grid">
+      <section className="recognition-grid monitor-grid">
         {tables.map((table) => {
           const snapshot = table.pointSnapshots[0] ?? null;
           const payload = payloadOf(snapshot?.payload);
           const recognition = payload.recognition ?? null;
           return (
-            <article className="recognition-card" key={table.id}>
+            <article className={`recognition-card monitor-card ${table.connectionStatus === "ONLINE" ? "online" : "offline"}`} key={table.id}>
               <div className="recognition-card-heading">
                 <div>
                   <h2>{table.tableNumber}卓</h2>
@@ -113,12 +117,17 @@ export default async function StoreRecognitionPage() {
                 </span>
               </div>
               <div className="recognition-image-frame">
+                <div className="monitor-live-label">{table.connectionStatus === "ONLINE" ? "LIVE" : "NO SIGNAL"}</div>
                 {recognition?.previewImage ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={recognition.previewImage} alt={`${table.tableNumber}卓の最後の認識画像`} />
                 ) : (
                   <span>画像なし</span>
                 )}
+                <div className="monitor-overlay">
+                  <strong>{pointsLabel(payload.points)}</strong>
+                  <small>{providerLabel(recognition?.provider)} / {formatTime(snapshot?.createdAt ?? table.lastSeenAt)}</small>
+                </div>
               </div>
               <dl className="recognition-meta">
                 <div>

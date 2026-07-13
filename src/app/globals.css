@@ -646,6 +646,35 @@ textarea {
   margin-bottom: 16px;
 }
 
+.monitor-title {
+  align-items: flex-end;
+}
+
+.monitor-status-strip {
+  align-items: end;
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.monitor-status-strip > span {
+  background: #12322e;
+  border-radius: 999px;
+  color: #dff8e8;
+  font-size: 13px;
+  font-weight: 900;
+  padding: 7px 12px;
+}
+
+.monitor-grid {
+  background: #0b1210;
+  border: 1px solid #25352f;
+  border-radius: 8px;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  padding: 10px;
+}
+
 .recognition-card {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -654,6 +683,19 @@ textarea {
   gap: 12px;
   min-width: 0;
   padding: 16px;
+}
+
+.monitor-card {
+  background: #101816;
+  border-color: #263832;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  color: #eef7f2;
+  gap: 8px;
+  padding: 10px;
+}
+
+.monitor-card.offline {
+  opacity: 0.82;
 }
 
 .recognition-card-heading {
@@ -668,6 +710,11 @@ textarea {
   margin: 0 0 4px;
 }
 
+.monitor-card .recognition-card-heading h2 {
+  color: #fff;
+  font-size: 18px;
+}
+
 .recognition-card-heading p {
   color: var(--muted);
   font-size: 12px;
@@ -675,15 +722,30 @@ textarea {
   overflow-wrap: anywhere;
 }
 
+.monitor-card .recognition-card-heading p {
+  color: #94aaa2;
+}
+
 .recognition-image-frame {
   align-items: center;
-  aspect-ratio: 1;
+  aspect-ratio: 16 / 9;
   background: #17211e;
   border-radius: 8px;
   color: rgba(255, 255, 255, 0.7);
   display: grid;
   justify-items: center;
   overflow: hidden;
+  position: relative;
+}
+
+.monitor-card .recognition-image-frame {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    #0b1512;
+  background-size: 28px 28px;
+  border: 1px solid #31453e;
+  border-radius: 6px;
 }
 
 .recognition-image-frame img {
@@ -692,10 +754,56 @@ textarea {
   width: 100%;
 }
 
+.monitor-live-label {
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  color: #dff8e8;
+  font-size: 12px;
+  font-weight: 900;
+  left: 10px;
+  letter-spacing: 0;
+  padding: 5px 9px;
+  position: absolute;
+  top: 10px;
+  z-index: 2;
+}
+
+.monitor-card.offline .monitor-live-label {
+  color: #ffdca8;
+}
+
+.monitor-overlay {
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.86));
+  bottom: 0;
+  display: grid;
+  gap: 4px;
+  left: 0;
+  padding: 36px 12px 12px;
+  position: absolute;
+  right: 0;
+  z-index: 2;
+}
+
+.monitor-overlay strong {
+  color: #fff;
+  font-size: clamp(16px, 1.6vw, 22px);
+  line-height: 1.35;
+}
+
+.monitor-overlay small {
+  color: #c0d0ca;
+  font-weight: 700;
+}
+
 .recognition-meta {
   display: grid;
   gap: 8px;
   margin: 0;
+}
+
+.monitor-card .recognition-meta {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .recognition-meta div {
@@ -705,10 +813,19 @@ textarea {
   padding-top: 8px;
 }
 
+.monitor-card .recognition-meta div {
+  border-color: #263832;
+  min-width: 0;
+}
+
 .recognition-meta dt {
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
+}
+
+.monitor-card .recognition-meta dt {
+  color: #94aaa2;
 }
 
 .recognition-meta dd {
@@ -716,6 +833,11 @@ textarea {
   line-height: 1.5;
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+.monitor-card .recognition-meta dd {
+  color: #eef7f2;
+  font-size: 13px;
 }
 
 .recognition-log-panel {
@@ -1623,6 +1745,14 @@ textarea {
     justify-content: flex-start;
     margin: 0 0 14px;
     min-height: 0;
+  }
+
+  .monitor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .monitor-card .recognition-meta {
+    grid-template-columns: 1fr;
   }
 }
 
