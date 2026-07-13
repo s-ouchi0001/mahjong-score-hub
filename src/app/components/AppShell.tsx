@@ -17,9 +17,10 @@ export async function AppShell({
   user?: ShellUser;
 }) {
   const user = passedUser === undefined ? await getCurrentUser() : passedUser;
+  const isStoreAdmin = user?.role === "STORE_ADMIN";
 
   return (
-    <div className="shell">
+    <div className={isStoreAdmin ? "shell admin-shell" : "shell"}>
       <header className="topbar">
         <Link className="brand" href="/">
           雀荘 成績管理クラウド
