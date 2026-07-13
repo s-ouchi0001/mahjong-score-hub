@@ -557,6 +557,89 @@ textarea {
   box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.12);
 }
 
+.recognition-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  margin-bottom: 16px;
+}
+
+.recognition-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+}
+
+.recognition-card-heading {
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.recognition-card-heading h2 {
+  font-size: 18px;
+  margin: 0 0 4px;
+}
+
+.recognition-card-heading p {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.recognition-image-frame {
+  align-items: center;
+  aspect-ratio: 1;
+  background: #17211e;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  display: grid;
+  justify-items: center;
+  overflow: hidden;
+}
+
+.recognition-image-frame img {
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.recognition-meta {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.recognition-meta div {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 3px;
+  padding-top: 8px;
+}
+
+.recognition-meta dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.recognition-meta dd {
+  font-weight: 700;
+  line-height: 1.5;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.recognition-log-panel {
+  margin-top: 16px;
+}
+
 .player-grid {
   display: grid;
   gap: 10px;
@@ -1114,7 +1197,39 @@ textarea {
   align-items: end;
   display: grid;
   gap: 10px;
-  grid-template-columns: minmax(120px, 180px) minmax(180px, 260px);
+  grid-template-columns: repeat(3, minmax(120px, 220px));
+}
+
+.ranking-filter-form {
+  align-items: flex-end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ranking-filter-form .field {
+  min-width: 180px;
+}
+
+.score-emphasis {
+  background: #12322e;
+  border-color: #12322e;
+  color: #fff;
+}
+
+.score-emphasis span {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.score-rank-heading,
+.score-rank-value {
+  background: #eef8f1;
+}
+
+.score-rank-value {
+  color: var(--accent-strong);
+  font-size: 1.18rem;
+  font-weight: 900;
 }
 
 .player-stats-toolbar {

@@ -11,7 +11,7 @@ export default async function StoreSettingsPage() {
     prisma.tournament.findMany({
       where: { storeId: user.storeId },
       orderBy: [{ startsAt: "desc" }, { createdAt: "desc" }],
-      select: { id: true, name: true, startsAt: true, endsAt: true },
+      select: { id: true, name: true, tableCount: true, startsAt: true, endsAt: true },
     }),
     prisma.store.findUniqueOrThrow({
       where: { id: user.storeId },

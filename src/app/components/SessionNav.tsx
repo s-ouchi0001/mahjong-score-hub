@@ -88,6 +88,7 @@ export function SessionNav({ session: initialSession }: { session: Session }) {
         <Link href="/store/qr-print">QR印刷</Link>
         <Link href="/store/players">成績一覧</Link>
         <Link href="/tables/participants">卓管理</Link>
+        <Link href="/store/recognition">認識確認</Link>
         <Link href="/results">成績入力</Link>
         <Link href="/store/games">成績修正</Link>
         <Link href="/store/reports">レポート</Link>

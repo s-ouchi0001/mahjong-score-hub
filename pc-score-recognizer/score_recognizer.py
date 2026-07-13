@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import os
 import re
@@ -96,6 +97,7 @@ class MahjongScoreRecognizer:
         self.capture_interval = int(config.get("captureIntervalMs", 1000)) / 1000
         self.send_interval = int(config.get("sendIntervalMs", 3000)) / 1000
         self.show_preview = bool(config.get("showPreview", True))
+        self.upload_preview_image = bool(config.get("uploadPreviewImage", True))
         self.save_dir = Path(str(config.get("saveImageDir", "pc-score-recognizer/captures")))
         self.stability = StabilityBuffer(int(config.get("stableFrameCount", 3)))
         self.store_id = ""
@@ -200,6 +202,7 @@ class MahjongScoreRecognizer:
             "recognition": {
                 "provider": "pc-red-led-recognizer",
                 "stableSeats": sorted(stable.keys()),
+                "previewImage": encode_preview_image(square) if self.upload_preview_image else None,
             },
             "points": points,
         }
@@ -242,6 +245,17 @@ def center_square(frame: np.ndarray) -> np.ndarray:
     left = (width - side) // 2
     top = (height - side) // 2
     return frame[top : top + side, left : left + side].copy()
+
+
+def encode_preview_image(square: np.ndarray) -> str | None:
+    max_side = 640
+    image = square
+    if square.shape[0] > max_side:
+        image = cv2.resize(square, (max_side, max_side), interpolation=cv2.INTER_AREA)
+    ok, encoded = cv2.imencode(".jpg", image, [int(cv2.IMWRITE_JPEG_QUALITY), 72])
+    if not ok:
+        return None
+    return "data:image/jpeg;base64," + base64.b64encode(encoded.tobytes()).decode("ascii")
 
 
 def rotate_image(image: np.ndarray, degrees: int) -> np.ndarray:

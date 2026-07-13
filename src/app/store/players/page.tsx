@@ -15,6 +15,10 @@ type PlayerSummary = {
   averageRank: number;
   topRate: number;
   lastRate: number;
+  firstRate: number;
+  secondRate: number;
+  thirdRate: number;
+  fourthRate: number;
   averageScore: number;
   totalScore: number;
   dan: string;
@@ -99,6 +103,10 @@ export default async function StorePlayersPage({
       averageRank: gameCount ? round(totalRank / gameCount, 2) : 0,
       topRate: gameCount ? round((topCount / gameCount) * 100, 1) : 0,
       lastRate: gameCount ? round((lastCount / gameCount) * 100, 1) : 0,
+      firstRate: gameCount ? round((records.filter((record) => record.rank === 1).length / gameCount) * 100, 1) : 0,
+      secondRate: gameCount ? round((records.filter((record) => record.rank === 2).length / gameCount) * 100, 1) : 0,
+      thirdRate: gameCount ? round((records.filter((record) => record.rank === 3).length / gameCount) * 100, 1) : 0,
+      fourthRate: gameCount ? round((records.filter((record) => record.rank === 4).length / gameCount) * 100, 1) : 0,
       averageScore: gameCount ? round(totalScore / gameCount, 1) : 0,
       totalScore: round(totalScore, 1),
     };
@@ -144,8 +152,10 @@ export default async function StorePlayersPage({
                 <th>プレイヤー</th>
                 <th>半荘数</th>
                 <th>平均順位</th>
-                <th>トップ率</th>
-                <th>ラス率</th>
+                <th>1着率</th>
+                <th>2着率</th>
+                <th>3着率</th>
+                <th>4着率</th>
                 <th>平均スコア</th>
                 <th>累計スコア</th>
                 <th>段位</th>
@@ -160,8 +170,10 @@ export default async function StorePlayersPage({
                   <td>{player.name}</td>
                   <td>{player.gameCount}</td>
                   <td>{player.averageRank.toFixed(2)}</td>
-                  <td>{player.topRate.toFixed(1)}%</td>
-                  <td>{player.lastRate.toFixed(1)}%</td>
+                  <td>{player.firstRate.toFixed(1)}%</td>
+                  <td>{player.secondRate.toFixed(1)}%</td>
+                  <td>{player.thirdRate.toFixed(1)}%</td>
+                  <td>{player.fourthRate.toFixed(1)}%</td>
                   <td>{player.averageScore.toFixed(1)}</td>
                   <td>{player.totalScore.toFixed(1)}</td>
                   <td>{player.dan}</td>

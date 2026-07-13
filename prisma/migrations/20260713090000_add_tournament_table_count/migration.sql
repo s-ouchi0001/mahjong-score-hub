@@ -1,0 +1,1 @@
+ALTER TABLE "Tournament" ADD COLUMN "tableCount" INTEGER NOT NULL DEFAULT 0;

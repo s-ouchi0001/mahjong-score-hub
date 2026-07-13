@@ -14,16 +14,23 @@ type TournamentOption = {
   name: string;
 };
 
-type StatsMode = "total" | "recent" | "tournament";
+type StatsMode = "total" | "recent" | "month" | "tournament";
+type CategoryFilter = "all" | "regular" | "tournament";
 
 type StatsPayload = {
   player: PlayerOption;
   mode: StatsMode;
+  category: CategoryFilter;
+  month: string;
   stats: {
     gameCount: number;
     averageRank: number;
     topRate: number;
     lastRate: number;
+    firstRate: number;
+    secondRate: number;
+    thirdRate: number;
+    fourthRate: number;
     averageScore: number;
     totalScore: number;
     dan: string;
@@ -53,6 +60,8 @@ export function PlayerStats({
   const initialPlayerId = searchParams.get("playerId");
   const [playerId, setPlayerId] = useState(lockedPlayerId ?? initialPlayerId ?? players[0]?.id ?? "");
   const [mode, setMode] = useState<StatsMode>("total");
+  const [category, setCategory] = useState<CategoryFilter>("all");
+  const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [tournamentId, setTournamentId] = useState(tournaments[0]?.id ?? "");
   const [payload, setPayload] = useState<StatsPayload | null>(null);
   const [loading, setLoading] = useState(false);
@@ -61,12 +70,16 @@ export function PlayerStats({
     if (!playerId) return;
     setLoading(true);
     const params = new URLSearchParams({ mode });
+    if (mode === "month") {
+      params.set("month", month);
+      params.set("category", category);
+    }
     if (mode === "tournament" && tournamentId) params.set("tournamentId", tournamentId);
     fetch(`/api/players/${playerId}/stats?${params.toString()}`)
       .then((response) => response.json())
       .then(setPayload)
       .finally(() => setLoading(false));
-  }, [playerId, mode, tournamentId]);
+  }, [playerId, mode, tournamentId, month, category]);
 
   return (
     <div className="grid">
@@ -110,9 +123,26 @@ export function PlayerStats({
               <select id="stats-mode" value={mode} onChange={(event) => setMode(event.target.value as StatsMode)}>
                 <option value="total">通算</option>
                 <option value="recent">直近</option>
+                <option value="month">月別</option>
                 <option value="tournament">大会</option>
               </select>
             </div>
+            {mode === "month" ? (
+              <>
+                <div className="field">
+                  <label htmlFor="stats-month">月</label>
+                  <input id="stats-month" type="month" value={month} onChange={(event) => setMonth(event.target.value)} />
+                </div>
+                <div className="field">
+                  <label htmlFor="stats-category">区分</label>
+                  <select id="stats-category" value={category} onChange={(event) => setCategory(event.target.value as CategoryFilter)}>
+                    <option value="all">全て</option>
+                    <option value="regular">通常</option>
+                    <option value="tournament">大会</option>
+                  </select>
+                </div>
+              </>
+            ) : null}
             {mode === "tournament" ? (
               <div className="field">
                 <label htmlFor="stats-tournament">大会</label>
@@ -129,6 +159,10 @@ export function PlayerStats({
           </div>
         </div>
         <div className="metric-grid">
+          <div className="metric score-emphasis">
+            <span>累計スコア</span>
+            <strong>{payload?.stats.totalScore.toFixed(1) ?? "0.0"}</strong>
+          </div>
           <div className="metric">
             <span>半荘数</span>
             <strong>{payload?.stats.gameCount ?? 0}</strong>
@@ -138,12 +172,20 @@ export function PlayerStats({
             <strong>{payload?.stats.averageRank.toFixed(2) ?? "0.00"}</strong>
           </div>
           <div className="metric">
-            <span>トップ率</span>
-            <strong>{payload?.stats.topRate.toFixed(1) ?? "0.0"}%</strong>
+            <span>1着率</span>
+            <strong>{payload?.stats.firstRate.toFixed(1) ?? "0.0"}%</strong>
           </div>
           <div className="metric">
-            <span>ラス率</span>
-            <strong>{payload?.stats.lastRate.toFixed(1) ?? "0.0"}%</strong>
+            <span>2着率</span>
+            <strong>{payload?.stats.secondRate.toFixed(1) ?? "0.0"}%</strong>
+          </div>
+          <div className="metric">
+            <span>3着率</span>
+            <strong>{payload?.stats.thirdRate.toFixed(1) ?? "0.0"}%</strong>
+          </div>
+          <div className="metric">
+            <span>4着率</span>
+            <strong>{payload?.stats.fourthRate.toFixed(1) ?? "0.0"}%</strong>
           </div>
           <div className="metric">
             <span>平均スコア</span>
@@ -153,7 +195,7 @@ export function PlayerStats({
       </section>
 
       <section className="panel">
-        <h2>{mode === "recent" ? "直近10半荘" : mode === "tournament" ? "大会成績" : "累計スコア"} {payload?.stats.totalScore.toFixed(1) ?? "0.0"}</h2>
+        <h2>{mode === "recent" ? "直近10半荘" : mode === "month" ? `${month} 成績` : mode === "tournament" ? "大会成績" : "成績履歴"}</h2>
         <div className="table-wrap">
           <table>
             <thead>

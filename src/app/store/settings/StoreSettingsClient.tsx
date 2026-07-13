@@ -5,6 +5,7 @@ import { useState } from "react";
 type Tournament = {
   id: string;
   name: string;
+  tableCount: number;
   startsAt: string | Date | null;
   endsAt: string | Date | null;
 };
@@ -28,6 +29,7 @@ export function StoreSettingsClient({
   const [items, setItems] = useState(tournaments);
   const [settings, setSettings] = useState(scoreSettings);
   const [name, setName] = useState("");
+  const [tableCount, setTableCount] = useState(0);
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -38,13 +40,18 @@ export function StoreSettingsClient({
       const response = await fetch("/api/tournaments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, tableCount }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "大会登録に失敗しました。");
-      setItems((current) => (current.some((item) => item.id === payload.tournament.id) ? current : [payload.tournament, ...current]));
+      setItems((current) =>
+        current.some((item) => item.id === payload.tournament.id)
+          ? current.map((item) => (item.id === payload.tournament.id ? payload.tournament : item))
+          : [payload.tournament, ...current],
+      );
       setName("");
-      setMessage({ type: "ok", text: "大会を登録しました。卓管理で大会卓に割り当てできます。" });
+      setTableCount(0);
+      setMessage({ type: "ok", text: tableCount > 0 ? `${tableCount}卓を大会卓に一括設定しました。` : "大会を登録しました。卓管理で大会卓に割り当てできます。" });
     } catch (error) {
       setMessage({ type: "error", text: error instanceof Error ? error.message : "大会登録に失敗しました。" });
     } finally {
@@ -127,6 +134,18 @@ export function StoreSettingsClient({
               placeholder="例: 7月度 月例大会"
             />
           </div>
+          <div className="field">
+            <label htmlFor="tournament-table-count">使用卓数</label>
+            <input
+              id="tournament-table-count"
+              type="number"
+              min="0"
+              step="1"
+              value={tableCount}
+              onChange={(event) => setTableCount(Number(event.target.value))}
+              placeholder="例: 8"
+            />
+          </div>
           <div className="actions">
             <button className="button" type="button" onClick={createTournament} disabled={isSaving}>
               大会を登録
@@ -142,6 +161,7 @@ export function StoreSettingsClient({
             <thead>
               <tr>
                 <th>大会名</th>
+                <th>使用卓数</th>
                 <th>登録日</th>
               </tr>
             </thead>
@@ -150,12 +170,13 @@ export function StoreSettingsClient({
                 items.map((tournament) => (
                   <tr key={tournament.id}>
                     <td>{tournament.name}</td>
+                    <td>{tournament.tableCount ? `${tournament.tableCount}卓` : "-"}</td>
                     <td>{tournament.startsAt ? new Date(tournament.startsAt).toLocaleDateString("ja-JP") : "-"}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={2} className="muted">
+                  <td colSpan={3} className="muted">
                     登録済み大会はありません。
                   </td>
                 </tr>
@@ -178,7 +199,7 @@ export function StoreSettingsClient({
           </div>
           <div>
             <strong>卓・大会運用</strong>
-            <span>大会登録後、卓管理で通常卓または大会卓に割り当てます。</span>
+            <span>大会登録時に使用卓数を入れると、1卓目から指定数までを大会卓へ一括設定します。</span>
           </div>
         </div>
       </section>

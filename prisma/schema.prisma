@@ -146,16 +146,17 @@ model Game {
 }
 
 model Tournament {
-  id        String         @id @default(cuid())
-  storeId   String
-  name      String
-  startsAt  DateTime?
-  endsAt    DateTime?
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-  store     Store          @relation(fields: [storeId], references: [id])
-  games     Game[]
-  tables    MahjongTable[]
+  id         String         @id @default(cuid())
+  storeId    String
+  name       String
+  tableCount Int            @default(0)
+  startsAt   DateTime?
+  endsAt     DateTime?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  store      Store          @relation(fields: [storeId], references: [id])
+  games      Game[]
+  tables     MahjongTable[]
 
   @@unique([storeId, name])
   @@index([storeId, startsAt])

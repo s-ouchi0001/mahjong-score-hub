@@ -15,6 +15,7 @@ Webカメラでも、Tapo C120のRTSP映像でも同じプログラムで扱え�
 - 同じ点数が複数回続いたときだけ安定値として採用
 - `GET /api/android/table` で卓情報を取得
 - `POST /api/android/point-update` で点数をWebアプリへ送信
+- 小さな確認用画像をWebアプリへ送信
 - 送信時の画像を学習データ候補として保存
 
 ## 初回準備

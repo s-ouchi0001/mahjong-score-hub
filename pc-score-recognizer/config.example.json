@@ -8,6 +8,7 @@
   "stableFrameCount": 3,
   "saveImageDir": "pc-score-recognizer/captures/table-1",
   "showPreview": true,
+  "uploadPreviewImage": true,
   "recognitionMode": "red_led",
   "regions": [
     { "seat": 1, "centerX": 50, "centerY": 3, "width": 38, "height": 7, "rotate": 180 },
